@@ -50,7 +50,7 @@ export const CallActivityGrid: React.FC = () => {
         break;
       case 'session':
         // Return individual calls for session view
-        return calls.slice(0, 100).map((call, index) => ({
+        return calls.slice(0, 200).map((call, index) => ({
           call,
           index
         })) as SessionData[];
