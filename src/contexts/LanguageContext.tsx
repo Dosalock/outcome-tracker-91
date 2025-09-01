@@ -52,7 +52,15 @@ const translations = {
     'engagement': 'Engagement',
     'yes': 'Yes',
     'engaged': 'Engaged',
-    'not-engaged': 'Not Engaged'
+    'not-engaged': 'Not Engaged',
+    
+    // Export
+    'export-csv': 'Export CSV',
+    
+    // Activity Grid
+    'call-activity': 'Call Activity',
+    'less': 'Less',
+    'more': 'More'
   },
   sv: {
     // Header
@@ -97,7 +105,15 @@ const translations = {
     'engagement': 'Engagemang',
     'yes': 'Ja',
     'engaged': 'Engagerad',
-    'not-engaged': 'Inte Engagerad'
+    'not-engaged': 'Inte Engagerad',
+    
+    // Export
+    'export-csv': 'Exportera CSV',
+    
+    // Activity Grid
+    'call-activity': 'Samtalsaktivitet',
+    'less': 'Mindre',
+    'more': 'Mer'
   }
 };
 

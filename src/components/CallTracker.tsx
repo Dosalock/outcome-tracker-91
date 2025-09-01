@@ -4,13 +4,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Trash2, Edit2, Phone, RotateCcw, Languages } from 'lucide-react';
+import { Trash2, Edit2, Phone, RotateCcw, Languages, Download } from 'lucide-react';
 import { useCallTracker } from '@/hooks/useCallTracker';
 import { CallOutcome } from '@/types/call-tracker';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
+import { CallActivityGrid } from './CallActivityGrid';
 
 const getCallOutcomes = (t: (key: string) => string): { value: CallOutcome; label: string; color: string }[] => [
   { value: 'yes-needs-confirmation', label: t('yes-needs-confirmation'), color: 'bg-success hover:bg-success-light' },
@@ -54,6 +55,35 @@ export const CallTracker: React.FC = () => {
       minute: '2-digit',
       hour12: true 
     });
+  };
+
+  const exportTodaysCallsCSV = () => {
+    const today = new Date().toDateString();
+    const todaysCalls = calls.filter(call => call.timestamp.toDateString() === today);
+    
+    if (todaysCalls.length === 0) {
+      return;
+    }
+
+    const headers = ['Time', 'Outcome', 'Notes'];
+    const csvData = [
+      headers.join(','),
+      ...todaysCalls.map(call => [
+        call.timestamp.toLocaleTimeString(),
+        getOutcomeConfig(call.outcome).label,
+        `"${call.notes || ''}"`
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvData], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `calls-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const getOutcomeConfig = (outcome: CallOutcome) => {
@@ -104,6 +134,15 @@ export const CallTracker: React.FC = () => {
               </Button>
             </div>
             <Button 
+              onClick={exportTodaysCallsCSV}
+              variant="outline"
+              className="flex items-center gap-2"
+              disabled={calls.filter(call => call.timestamp.toDateString() === new Date().toDateString()).length === 0}
+            >
+              <Download className="h-4 w-4" />
+              {t('export-csv')}
+            </Button>
+            <Button 
               onClick={startNewSession}
               variant="outline"
               className="flex items-center gap-2"
@@ -151,9 +190,9 @@ export const CallTracker: React.FC = () => {
                   <p className="text-sm font-medium text-muted-foreground">{t('yes-ratio')}</p>
                   <p className="text-2xl font-bold text-success">{stats.yesRatio.toFixed(1)}%</p>
                 </div>
-                <div className="w-24 h-24 p-2">
+                <div className="w-20 h-20 p-2">
                   <ChartContainer config={{ yes: { color: 'hsl(var(--success))' }, no: { color: 'hsl(var(--danger))' } }}>
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width={80} height={80}>
                       <PieChart>
                         <Pie
                           data={yesNoData}
@@ -183,9 +222,9 @@ export const CallTracker: React.FC = () => {
                   <p className="text-sm font-medium text-muted-foreground">{t('engagement-ratio')}</p>
                   <p className="text-2xl font-bold text-info">{stats.engagementRatio.toFixed(1)}%</p>
                 </div>
-                <div className="w-24 h-24 p-2">
+                <div className="w-20 h-20 p-2">
                   <ChartContainer config={{ engaged: { color: 'hsl(var(--info))' }, notEngaged: { color: 'hsl(var(--neutral))' } }}>
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width={80} height={80}>
                       <PieChart>
                         <Pie
                           data={engagementData}
@@ -208,6 +247,9 @@ export const CallTracker: React.FC = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Activity Grid */}
+        <CallActivityGrid />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Call Logging Panel */}
