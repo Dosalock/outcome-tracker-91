@@ -143,7 +143,7 @@ export const CallActivityGrid: React.FC = () => {
       case 'quarter': return 'grid-cols-12'; 
       case 'month': return 'grid-cols-10';
       case 'week': return 'grid-cols-7';
-      case 'session': return 'grid-cols-1';
+      case 'session': return 'grid-cols-9';
       default: return 'grid-cols-12';
     }
   };
