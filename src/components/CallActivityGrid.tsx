@@ -1,30 +1,64 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { useCallTracker } from '@/hooks/useCallTracker';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
-import { CallOutcome } from '@/types/call-tracker';
+import { CallOutcome, CallEntry } from '@/types/call-tracker';
+
+type TimePeriod = 'year' | 'quarter' | 'month' | 'week' | 'session';
 
 interface DayData {
   date: Date;
   calls: number;
   outcomes: CallOutcome[];
+  callEntries: CallEntry[];
   intensity: number;
+}
+
+interface SessionData {
+  call: CallEntry;
+  index: number;
 }
 
 export const CallActivityGrid: React.FC = () => {
   const { calls } = useCallTracker();
   const { t } = useLanguage();
+  const [timePeriod, setTimePeriod] = useState<TimePeriod>('quarter');
 
-  // Generate last 12 weeks of data
-  const generateGridData = (): DayData[] => {
+  const generateGridData = (): DayData[] | SessionData[] => {
     const today = new Date();
-    const startDate = new Date(today);
-    startDate.setDate(today.getDate() - (12 * 7)); // 12 weeks ago
+    let startDate = new Date(today);
+    let days = 84; // Default for quarter
+    
+    switch (timePeriod) {
+      case 'year':
+        startDate.setFullYear(today.getFullYear() - 1);
+        days = 365;
+        break;
+      case 'quarter':
+        startDate.setDate(today.getDate() - (12 * 7)); // 12 weeks
+        days = 84;
+        break;
+      case 'month':
+        startDate.setDate(today.getDate() - 30);
+        days = 30;
+        break;
+      case 'week':
+        startDate.setDate(today.getDate() - 7);
+        days = 7;
+        break;
+      case 'session':
+        // Return individual calls for session view
+        return calls.slice(0, 100).map((call, index) => ({
+          call,
+          index
+        })) as SessionData[];
+    }
     
     const gridData: DayData[] = [];
     
-    for (let i = 0; i < 84; i++) { // 12 weeks * 7 days
+    for (let i = 0; i < days; i++) {
       const currentDate = new Date(startDate);
       currentDate.setDate(startDate.getDate() + i);
       
@@ -46,6 +80,7 @@ export const CallActivityGrid: React.FC = () => {
         date: currentDate,
         calls: callCount,
         outcomes,
+        callEntries: daysCalls,
         intensity
       });
     }
@@ -54,7 +89,27 @@ export const CallActivityGrid: React.FC = () => {
   };
 
   const gridData = generateGridData();
+  const isSessionView = timePeriod === 'session';
   
+  const getOutcomeColor = (outcome: CallOutcome) => {
+    switch (outcome) {
+      case 'confirmed-sale': return 'bg-outcome-confirmed';
+      case 'yes-needs-confirmation': return 'bg-outcome-yes';
+      case 'no': return 'bg-outcome-no';
+      case 'absolutely-no': return 'bg-outcome-absolutelyNo';
+      case 'hangup': return 'bg-outcome-hangup';
+      case 'call-later': return 'bg-outcome-callLater';
+      case 'call-in-2-months': return 'bg-outcome-call2months';
+      case 'sickness-medicine': return 'bg-outcome-sickness';
+      case 'already-customer': return 'bg-outcome-alreadyCustomer';
+      case 'not-enough-money': return 'bg-outcome-noMoney';
+      case 'language-difficulties': return 'bg-outcome-language';
+      case 'wrong-number': return 'bg-outcome-wrongNumber';
+      case 'dnc': return 'bg-outcome-dnc';
+      default: return 'bg-muted/30';
+    }
+  };
+
   const getIntensityColor = (intensity: number) => {
     switch (intensity) {
       case 0: return 'bg-muted/30';
@@ -78,10 +133,28 @@ export const CallActivityGrid: React.FC = () => {
     return `${day.date.toLocaleDateString()}: ${day.calls} calls, ${successfulCalls} successful`;
   };
 
-  // Group by weeks for display
+  const formatSessionTooltip = (sessionData: SessionData) => {
+    return `Call ${sessionData.index + 1}: ${sessionData.call.outcome}${sessionData.call.notes ? ` - ${sessionData.call.notes}` : ''}`;
+  };
+
+  const getGridCols = () => {
+    switch (timePeriod) {
+      case 'year': return 'grid-cols-12';
+      case 'quarter': return 'grid-cols-12'; 
+      case 'month': return 'grid-cols-10';
+      case 'week': return 'grid-cols-7';
+      case 'session': return 'grid-cols-10';
+      default: return 'grid-cols-12';
+    }
+  };
+
+  // Group by weeks for display (only for non-session views)
   const weeks: DayData[][] = [];
-  for (let i = 0; i < gridData.length; i += 7) {
-    weeks.push(gridData.slice(i, i + 7));
+  if (!isSessionView && Array.isArray(gridData) && gridData.length > 0 && 'date' in gridData[0]) {
+    const dayData = gridData as DayData[];
+    for (let i = 0; i < dayData.length; i += 7) {
+      weeks.push(dayData.slice(i, i + 7));
+    }
   }
 
   return (
@@ -89,65 +162,131 @@ export const CallActivityGrid: React.FC = () => {
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span>{t('call-activity')}</span>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span>{t('less')}</span>
+          <div className="flex items-center gap-2">
             <div className="flex gap-1">
-              {[0, 1, 2, 3, 4].map(level => (
-                <div
-                  key={level}
-                  className={cn(
-                    "w-2.5 h-2.5 rounded-sm",
-                    getIntensityColor(level)
-                  )}
-                />
+              {(['year', 'quarter', 'month', 'week', 'session'] as TimePeriod[]).map(period => (
+                <Button
+                  key={period}
+                  variant={timePeriod === period ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setTimePeriod(period)}
+                  className="h-7 px-2 text-xs"
+                >
+                  {period.charAt(0).toUpperCase() + period.slice(1)}
+                </Button>
               ))}
             </div>
-            <span>{t('more')}</span>
           </div>
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-1">
-          {/* Day labels */}
-          <div className="grid grid-cols-[auto_1fr] gap-2 text-xs text-muted-foreground mb-2">
-            <div className="w-8"></div>
-            <div className="grid grid-cols-12 gap-1">
-              {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map(month => (
-                <div key={month} className="text-center">{month}</div>
+        {isSessionView ? (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
+              <span>Recent calls:</span>
+            </div>
+            <div className={cn("grid gap-1", getGridCols())}>
+              {(gridData as SessionData[]).map((sessionData, index) => (
+                <div
+                  key={index}
+                  className={cn(
+                    "w-3 h-3 rounded-sm cursor-pointer transition-all hover:ring-1 hover:ring-primary/50",
+                    getOutcomeColor(sessionData.call.outcome)
+                  )}
+                  title={formatSessionTooltip(sessionData)}
+                />
               ))}
             </div>
           </div>
-          
-          {/* Grid */}
-          <div className="grid grid-cols-[auto_1fr] gap-2">
-            {/* Week day labels */}
-            <div className="space-y-1">
-              {['Mon', 'Wed', 'Fri'].map((day, index) => (
-                <div key={day} className="h-2.5 text-xs text-muted-foreground flex items-center" style={{ marginTop: index === 0 ? '0' : '0.375rem' }}>
-                  {day}
-                </div>
-              ))}
-            </div>
-            
-            {/* Activity grid */}
-            <div className="grid grid-cols-12 gap-1">
-              {weeks.map((week, weekIndex) => (
-                <div key={weekIndex} className="space-y-1">
-                  {week.map((day, dayIndex) => (
+        ) : (
+          <div className="space-y-1">
+            {/* Legend */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <span>{t('less')}</span>
+                <div className="flex gap-1">
+                  {[0, 1, 2, 3, 4].map(level => (
                     <div
-                      key={dayIndex}
+                      key={level}
                       className={cn(
-                        "w-2.5 h-2.5 rounded-sm cursor-pointer transition-all hover:ring-1 hover:ring-primary/50",
+                        "w-2.5 h-2.5 rounded-sm",
+                        getIntensityColor(level)
+                      )}
+                    />
+                  ))}
+                </div>
+                <span>{t('more')}</span>
+              </div>
+            </div>
+
+            {/* Month labels */}
+            {(timePeriod === 'year' || timePeriod === 'quarter') && (
+              <div className="grid grid-cols-[auto_1fr] gap-2 text-xs text-muted-foreground mb-2">
+                <div className="w-8"></div>
+                <div className={cn("grid gap-1", getGridCols())}>
+                  {timePeriod === 'year' 
+                    ? ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map(month => (
+                        <div key={month} className="text-center">{month}</div>
+                      ))
+                    : Array.from({ length: 12 }, (_, i) => (
+                        <div key={i} className="text-center">{i + 1}</div>
+                      ))
+                  }
+                </div>
+              </div>
+            )}
+            
+            {/* Grid */}
+            <div className="grid grid-cols-[auto_1fr] gap-2">
+              {/* Week day labels for week/quarter/year views */}
+              {(timePeriod === 'quarter' || timePeriod === 'year') && (
+                <div className="space-y-1">
+                  {['Mon', 'Wed', 'Fri'].map((day, index) => (
+                    <div key={day} className="h-2.5 text-xs text-muted-foreground flex items-center" style={{ marginTop: index === 0 ? '0' : '0.375rem' }}>
+                      {day}
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              {/* Day labels for month/week views */}
+              {(timePeriod === 'month' || timePeriod === 'week') && (
+                <div className="w-8"></div>
+              )}
+              
+              {/* Activity grid */}
+              <div className={cn("grid gap-1", getGridCols())}>
+                {(timePeriod === 'quarter' || timePeriod === 'year') ? (
+                  weeks.map((week, weekIndex) => (
+                    <div key={weekIndex} className="space-y-1">
+                      {week.map((day, dayIndex) => (
+                        <div
+                          key={dayIndex}
+                          className={cn(
+                            "w-2.5 h-2.5 rounded-sm cursor-pointer transition-all hover:ring-1 hover:ring-primary/50",
+                            getIntensityColor(day.intensity)
+                          )}
+                          title={formatTooltip(day)}
+                        />
+                      ))}
+                    </div>
+                  ))
+                ) : (
+                  (gridData as DayData[]).map((day, index) => (
+                    <div
+                      key={index}
+                      className={cn(
+                        "w-4 h-4 rounded-sm cursor-pointer transition-all hover:ring-1 hover:ring-primary/50",
                         getIntensityColor(day.intensity)
                       )}
                       title={formatTooltip(day)}
                     />
-                  ))}
-                </div>
-              ))}
+                  ))
+                )}
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </CardContent>
     </Card>
   );

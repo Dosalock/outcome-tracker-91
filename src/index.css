@@ -57,6 +57,21 @@
     --danger-foreground: 0 0% 100%;
     --danger-light: 0 93% 74%;
 
+    /* Call Outcome Colors */
+    --outcome-confirmed: 142 76% 36%;
+    --outcome-yes: 142 69% 58%;
+    --outcome-no: 38 92% 50%;
+    --outcome-absolutely-no: 0 84% 60%;
+    --outcome-hangup: 240 4% 46%;
+    --outcome-call-later: 204 94% 64%;
+    --outcome-call-2months: 199 89% 48%;
+    --outcome-sickness: 43 96% 56%;
+    --outcome-already-customer: 262 84% 64%;
+    --outcome-no-money: 0 93% 74%;
+    --outcome-language: 280 76% 58%;
+    --outcome-wrong-number: 240 5% 65%;
+    --outcome-dnc: 0 0% 20%;
+
     /* Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(217 91% 70%));
     --gradient-success: linear-gradient(135deg, hsl(var(--success)), hsl(var(--success-light)));
@@ -120,6 +135,21 @@
     --danger: 0 84% 60%;
     --danger-foreground: 240 10% 4%;
     --danger-light: 0 93% 74%;
+
+    /* Dark mode Call Outcome Colors */
+    --outcome-confirmed: 142 71% 45%;
+    --outcome-yes: 142 69% 58%;
+    --outcome-no: 38 92% 50%;
+    --outcome-absolutely-no: 0 84% 60%;
+    --outcome-hangup: 240 5% 55%;
+    --outcome-call-later: 204 94% 64%;
+    --outcome-call-2months: 199 89% 60%;
+    --outcome-sickness: 43 96% 56%;
+    --outcome-already-customer: 262 84% 64%;
+    --outcome-no-money: 0 93% 74%;
+    --outcome-language: 280 76% 58%;
+    --outcome-wrong-number: 240 5% 65%;
+    --outcome-dnc: 0 0% 40%;
 
     /* Dark mode gradients */
     --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(217 91% 80%));

@@ -77,6 +77,21 @@ export default {
 					foreground: 'hsl(var(--danger-foreground))',
 					light: 'hsl(var(--danger-light))'
 				},
+				outcome: {
+					confirmed: 'hsl(var(--outcome-confirmed))',
+					yes: 'hsl(var(--outcome-yes))',
+					no: 'hsl(var(--outcome-no))',
+					absolutelyNo: 'hsl(var(--outcome-absolutely-no))',
+					hangup: 'hsl(var(--outcome-hangup))',
+					callLater: 'hsl(var(--outcome-call-later))',
+					call2months: 'hsl(var(--outcome-call-2months))',
+					sickness: 'hsl(var(--outcome-sickness))',
+					alreadyCustomer: 'hsl(var(--outcome-already-customer))',
+					noMoney: 'hsl(var(--outcome-no-money))',
+					language: 'hsl(var(--outcome-language))',
+					wrongNumber: 'hsl(var(--outcome-wrong-number))',
+					dnc: 'hsl(var(--outcome-dnc))'
+				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
