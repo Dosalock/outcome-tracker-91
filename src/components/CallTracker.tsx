@@ -230,8 +230,8 @@ export const CallTracker: React.FC = () => {
                           data={engagementData}
                           dataKey="value"
                           nameKey="name"
-                          cx="50%"
-                          cy="50%"
+                          cx="100%"
+                          cy="100%"
                           outerRadius={30}
                         >
                           {engagementData.map((entry, index) => (
