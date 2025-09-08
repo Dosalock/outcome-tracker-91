@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useCallTracker } from '@/hooks/useCallTracker';
@@ -29,7 +29,7 @@ export const CallActivityGrid: React.FC = () => {
   const { width } = useWindowSize();
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('quarter');
 
-  const generateGridData = (): DayData[] | SessionData[] => {
+  const generateGridData = useMemo((): DayData[] | SessionData[] => {
     const today = new Date();
     let startDate = new Date(today);
     let days = 84; // Default for quarter
@@ -94,9 +94,9 @@ export const CallActivityGrid: React.FC = () => {
     }
     
     return gridData;
-  };
+  }, [timePeriod, calls, allHistoricalCalls]);
 
-  const gridData = generateGridData();
+  const gridData = generateGridData;
   const isSessionView = timePeriod === 'session';
   
   const getOutcomeColor = (outcome: CallOutcome) => {
