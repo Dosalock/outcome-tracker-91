@@ -64,15 +64,15 @@ const translations = {
   },
   sv: {
     // Header
-    'call-tracker': 'Samtalsspårare',
-    'track-performance': 'Spåra dina samtalsresultat och prestanda',
+    'call-tracker': 'Samtals stats',
+    'track-performance': 'Spåra dina samtalsresultat',
     'new-session': 'Ny Session',
     
     // Statistics
     'total-calls': 'Totala Samtal',
     'confirmed-sales': 'Bekräftade Försäljningar',
-    'yes-ratio': 'Ja-kvot',
-    'engagement-ratio': 'Engagemang-kvot',
+    'yes-ratio': 'Ja-ratio',
+    'engagement-ratio': 'Engagemang-ratio',
     
     // Call logging
     'log-call-outcome': 'Logga Samtalsresultat',
@@ -92,20 +92,20 @@ const translations = {
     'absolutely-no': 'Absolut Nej',
     'hangup': 'Lade På',
     'call-later': 'Ring Senare',
-    'call-in-2-months': 'Ring om 2 Månader',
+    'call-in-2-months': 'Ring om 2 månader',
     'sickness-medicine': 'Sjukdom/Medicin',
-    'already-customer': 'Redan Kund',
-    'not-enough-money': 'Inte Tillräckligt med Pengar',
+    'already-customer': 'Redan kund',
+    'not-enough-money': 'Inte tillräckligt med pengar',
     'language-difficulties': 'Språksvårigheter',
-    'wrong-number': 'Fel Nummer',
-    'dnc': 'Ring Ej (Do Not Call)',
+    'wrong-number': 'Fel nummer',
+    'dnc': 'Ring ej (Do Not Call)',
     
     // Charts
     'yes-vs-no': 'Ja vs Nej',
     'engagement': 'Engagemang',
     'yes': 'Ja',
     'engaged': 'Engagerad',
-    'not-engaged': 'Inte Engagerad',
+    'not-engaged': 'Inte engagerad',
     
     // Export
     'export-csv': 'Exportera CSV',
