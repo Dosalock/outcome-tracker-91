@@ -94,13 +94,19 @@ export const useCallTracker = () => {
   }, []);
 
   const addCall = useCallback((outcome: CallOutcome, notes?: string) => {
+    console.log('useCallTracker: Adding call with outcome:', outcome);
     const newCall: CallEntry = {
       id: `call-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       outcome,
       timestamp: new Date(),
       notes,
     };
-    setCalls(prevCalls => [newCall, ...prevCalls]);
+    console.log('useCallTracker: New call created:', newCall);
+    setCalls(prevCalls => {
+      const updatedCalls = [newCall, ...prevCalls];
+      console.log('useCallTracker: Updated calls array length:', updatedCalls.length);
+      return updatedCalls;
+    });
   }, []);
 
   const updateCall = useCallback((callId: string, outcome: CallOutcome, notes?: string) => {

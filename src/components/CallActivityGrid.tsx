@@ -30,6 +30,7 @@ export const CallActivityGrid: React.FC = () => {
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('quarter');
 
   const generateGridData = useMemo((): DayData[] | SessionData[] => {
+    console.log('CallActivityGrid: Generating grid data, calls length:', calls.length, 'historical calls length:', allHistoricalCalls.length);
     const today = new Date();
     let startDate = new Date(today);
     let days = 84; // Default for quarter

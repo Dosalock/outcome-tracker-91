@@ -39,8 +39,10 @@ export const CallTracker: React.FC = () => {
   const CALL_OUTCOMES = getCallOutcomes(t);
 
   const handleAddCall = (outcome: CallOutcome) => {
+    console.log('Adding call with outcome:', outcome);
     addCall(outcome, notes.trim() || undefined);
     setNotes('');
+    console.log('Call added, current calls count:', calls.length);
   };
 
   const handleUpdateCall = (callId: string, outcome: CallOutcome) => {
