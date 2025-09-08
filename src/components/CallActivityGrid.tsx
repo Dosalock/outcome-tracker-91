@@ -11,6 +11,7 @@ type TimePeriod = 'year' | 'quarter' | 'month' | 'week' | 'session';
 interface DayData {
   date: Date;
   calls: number;
+  confirmedSales: number;
   outcomes: CallOutcome[];
   callEntries: CallEntry[];
   intensity: number;
@@ -22,7 +23,7 @@ interface SessionData {
 }
 
 export const CallActivityGrid: React.FC = () => {
-  const { calls } = useCallTracker();
+  const { calls, allHistoricalCalls } = useCallTracker();
   const { t } = useLanguage();
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('quarter');
 
@@ -30,6 +31,9 @@ export const CallActivityGrid: React.FC = () => {
     const today = new Date();
     let startDate = new Date(today);
     let days = 84; // Default for quarter
+    
+    // Use historical data for long-term views, current session for session view
+    const dataSource = timePeriod === 'session' ? calls : allHistoricalCalls;
     
     switch (timePeriod) {
       case 'year':
@@ -49,7 +53,7 @@ export const CallActivityGrid: React.FC = () => {
         days = 7;
         break;
       case 'session':
-        // Return individual calls for session view
+        // Return individual calls for session view (up to 200 calls)
         return calls.slice(0, 200).map((call, index) => ({
           call,
           index
@@ -62,23 +66,25 @@ export const CallActivityGrid: React.FC = () => {
       const currentDate = new Date(startDate);
       currentDate.setDate(startDate.getDate() + i);
       
-      const daysCalls = calls.filter(call => 
+      const daysCalls = dataSource.filter(call => 
         call.timestamp.toDateString() === currentDate.toDateString()
       );
       
       const callCount = daysCalls.length;
+      const confirmedSales = daysCalls.filter(call => call.outcome === 'confirmed-sale').length;
       const outcomes = daysCalls.map(call => call.outcome);
       
-      // Calculate intensity based on call count (0-4 scale)
+      // Calculate intensity based on confirmed sales (0-4 scale)
       let intensity = 0;
-      if (callCount > 0) intensity = 1;
-      if (callCount > 5) intensity = 2;
-      if (callCount > 10) intensity = 3;
-      if (callCount > 20) intensity = 4;
+      if (confirmedSales >= 1) intensity = 1;
+      if (confirmedSales >= 3) intensity = 2;
+      if (confirmedSales >= 5) intensity = 3;
+      if (confirmedSales >= 7) intensity = 4;
       
       gridData.push({
         date: currentDate,
         calls: callCount,
+        confirmedSales,
         outcomes,
         callEntries: daysCalls,
         intensity
@@ -126,11 +132,7 @@ export const CallActivityGrid: React.FC = () => {
       return `${day.date.toLocaleDateString()}: No calls`;
     }
     
-    const successfulCalls = day.outcomes.filter(outcome => 
-      outcome === 'yes-needs-confirmation' || outcome === 'confirmed-sale'
-    ).length;
-    
-    return `${day.date.toLocaleDateString()}: ${day.calls} calls, ${successfulCalls} successful`;
+    return `${day.date.toLocaleDateString()}: ${day.calls} calls, ${day.confirmedSales} confirmed sales`;
   };
 
   const formatSessionTooltip = (sessionData: SessionData) => {
@@ -143,7 +145,7 @@ export const CallActivityGrid: React.FC = () => {
       case 'quarter': return 'grid-cols-12'; 
       case 'month': return 'grid-cols-10';
       case 'week': return 'grid-cols-7';
-      case 'session': return 'grid-cols-9';
+      case 'session': return 'grid-cols-10';
       default: return 'grid-cols-12';
     }
   };
@@ -183,9 +185,9 @@ export const CallActivityGrid: React.FC = () => {
         {isSessionView ? (
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
-              <span>Recent calls:</span>
+              <span>Session calls (left to right, top to bottom):</span>
             </div>
-            <div className={cn("grid gap-1", getGridCols())}>
+            <div className="grid grid-cols-10 gap-1 w-fit">
               {(gridData as SessionData[]).map((sessionData, index) => (
                 <div
                   key={index}

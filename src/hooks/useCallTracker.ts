@@ -3,13 +3,25 @@ import { CallEntry, CallOutcome, CallStats, CallSession } from '@/types/call-tra
 
 const STORAGE_KEY = 'call-tracker-data';
 const CURRENT_SESSION_KEY = 'call-tracker-current-session';
+const HISTORICAL_DATA_KEY = 'call-tracker-historical-data';
 
 export const useCallTracker = () => {
   const [currentSession, setCurrentSession] = useState<CallSession | null>(null);
   const [calls, setCalls] = useState<CallEntry[]>([]);
+  const [allHistoricalCalls, setAllHistoricalCalls] = useState<CallEntry[]>([]);
 
   // Load data from localStorage on mount
   useEffect(() => {
+    // Load historical data
+    const savedHistoricalData = localStorage.getItem(HISTORICAL_DATA_KEY);
+    if (savedHistoricalData) {
+      const historicalCalls = JSON.parse(savedHistoricalData).map((call: any) => ({
+        ...call,
+        timestamp: new Date(call.timestamp)
+      }));
+      setAllHistoricalCalls(historicalCalls);
+    }
+
     const savedSession = localStorage.getItem(CURRENT_SESSION_KEY);
     if (savedSession) {
       const parsed = JSON.parse(savedSession);
@@ -40,8 +52,21 @@ export const useCallTracker = () => {
         }))
       };
       localStorage.setItem(CURRENT_SESSION_KEY, JSON.stringify(sessionToSave));
+      
+      // Update historical data
+      const allCalls = [...allHistoricalCalls, ...calls];
+      const uniqueCalls = allCalls.filter((call, index, self) => 
+        self.findIndex(c => c.id === call.id) === index
+      );
+      setAllHistoricalCalls(uniqueCalls);
+      localStorage.setItem(HISTORICAL_DATA_KEY, JSON.stringify(
+        uniqueCalls.map(call => ({
+          ...call,
+          timestamp: call.timestamp.toISOString()
+        }))
+      ));
     }
-  }, [calls, currentSession]);
+  }, [calls, currentSession, allHistoricalCalls]);
 
   const startNewSession = useCallback(() => {
     const newSession: CallSession = {
@@ -128,6 +153,7 @@ export const useCallTracker = () => {
 
   return {
     calls,
+    allHistoricalCalls,
     currentSession,
     addCall,
     updateCall,
