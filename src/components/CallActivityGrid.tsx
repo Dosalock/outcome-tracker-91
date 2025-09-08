@@ -23,20 +23,20 @@ interface SessionData {
   index: number;
 }
 
-export const CallActivityGrid: React.FC = () => {
-  const { calls, allHistoricalCalls } = useCallTracker();
+export const CallActivityGrid: React.FC<{ calls: CallEntry[] }> = ({ calls: currentSessionCalls }) => { // Renamed prop to avoid conflict
+  const { allHistoricalCalls } = useCallTracker(); // Removed 'calls' from here
   const { t } = useLanguage();
   const { width } = useWindowSize();
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('quarter');
 
   const generateGridData = useMemo((): DayData[] | SessionData[] => {
-    console.log('CallActivityGrid: Generating grid data, calls length:', calls.length, 'historical calls length:', allHistoricalCalls.length);
+    console.log('CallActivityGrid: Generating grid data, currentSessionCalls length:', currentSessionCalls.length, 'historical calls length:', allHistoricalCalls.length);
     const today = new Date();
     let startDate = new Date(today);
     let days = 84; // Default for quarter
     
     // Use historical data for long-term views, current session for session view
-    const dataSource = timePeriod === 'session' ? calls : allHistoricalCalls;
+    const dataSource = timePeriod === 'session' ? currentSessionCalls : allHistoricalCalls; // Use currentSessionCalls here
     
     switch (timePeriod) {
       case 'year':
@@ -57,7 +57,7 @@ export const CallActivityGrid: React.FC = () => {
         break;
       case 'session':
         // Return individual calls for session view (up to 200 calls)
-        return calls.slice(0, 200).map((call, index) => ({
+        return currentSessionCalls.slice(0, 200).map((call, index) => ({ // Use currentSessionCalls here
           call,
           index
         })) as SessionData[];
@@ -95,7 +95,7 @@ export const CallActivityGrid: React.FC = () => {
     }
     
     return gridData;
-  }, [timePeriod, calls, allHistoricalCalls]);
+  }, [timePeriod, currentSessionCalls, allHistoricalCalls]); // Updated dependency array
 
   const gridData = generateGridData;
   const isSessionView = timePeriod === 'session';

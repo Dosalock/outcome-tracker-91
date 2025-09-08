@@ -251,7 +251,7 @@ export const CallTracker: React.FC = () => {
         </div>
 
         {/* Activity Grid */}
-        <CallActivityGrid />
+        <CallActivityGrid calls={calls} />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Call Logging Panel */}
