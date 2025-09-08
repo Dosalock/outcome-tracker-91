@@ -202,7 +202,7 @@ export const CallTracker: React.FC = () => {
                           nameKey="name"
                           cx="50%"
                           cy="50%"
-                          outerRadius={28} {/* Slightly reduced outerRadius */}
+                          outerRadius={28} /* Slightly reduced outerRadius */
                           innerRadius={15} // Added innerRadius for a donut chart style
                         >
                           {yesNoData.map((entry, index) => (
@@ -235,7 +235,7 @@ export const CallTracker: React.FC = () => {
                           nameKey="name"
                           cx="50%" // Changed to 50% for centering
                           cy="50%" // Changed to 50% for centering
-                          outerRadius={28} {/* Slightly reduced outerRadius */}
+                          outerRadius={28} /* Slightly reduced outerRadius */
                           innerRadius={15} // Added innerRadius for a donut chart style
                         >
                           {engagementData.map((entry, index) => (
