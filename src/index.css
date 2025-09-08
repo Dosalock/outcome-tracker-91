@@ -139,8 +139,8 @@
     /* Dark mode Call Outcome Colors */
     --outcome-confirmed: 142 71% 45%;
     --outcome-yes: 142 69% 58%;
-    --outcome-no: 38 92% 50%;
-    --outcome-absolutely-no: 0 84% 60%;
+    --outcome-no: 0 84% 60%;
+    --outcome-absolutely-no: 0 60% 34.7%;
     --outcome-hangup: 240 5% 55%;
     --outcome-call-later: 204 94% 64%;
     --outcome-call-2months: 199 89% 60%;
