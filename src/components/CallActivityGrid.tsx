@@ -104,7 +104,7 @@ export const CallActivityGrid: React.FC<{ calls: CallEntry[] }> = ({ calls: curr
     switch (outcome) {
       case 'confirmed-sale': return 'bg-outcome-confirmed';
       case 'yes-needs-confirmation': return 'bg-outcome-yes';
-      case 'no': return 'bg-outcome-no';
+      case 'no': return  'bg-outcome-no';
       case 'absolutely-no': return 'bg-outcome-absolutelyNo';
       case 'hangup': return 'bg-outcome-hangup';
       case 'call-later': return 'bg-outcome-callLater';
