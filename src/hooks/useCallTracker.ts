@@ -52,12 +52,27 @@ export const useCallTracker = () => {
         }))
       };
       localStorage.setItem(CURRENT_SESSION_KEY, JSON.stringify(sessionToSave));
-      
-      // Update historical data
-      const allCalls = [...allHistoricalCalls, ...calls];
+    }
+  }, [calls, currentSession]);
+
+  // Update historical data whenever calls change
+  useEffect(() => {
+    if (calls.length > 0) {
+      // Load existing historical data
+      const savedHistoricalData = localStorage.getItem(HISTORICAL_DATA_KEY);
+      const existingHistoricalCalls = savedHistoricalData 
+        ? JSON.parse(savedHistoricalData).map((call: any) => ({
+            ...call,
+            timestamp: new Date(call.timestamp)
+          }))
+        : [];
+
+      // Merge current session calls with historical data
+      const allCalls = [...existingHistoricalCalls, ...calls];
       const uniqueCalls = allCalls.filter((call, index, self) => 
         self.findIndex(c => c.id === call.id) === index
       );
+      
       setAllHistoricalCalls(uniqueCalls);
       localStorage.setItem(HISTORICAL_DATA_KEY, JSON.stringify(
         uniqueCalls.map(call => ({
@@ -66,7 +81,7 @@ export const useCallTracker = () => {
         }))
       ));
     }
-  }, [calls, currentSession, allHistoricalCalls]);
+  }, [calls]);
 
   const startNewSession = useCallback(() => {
     const newSession: CallSession = {

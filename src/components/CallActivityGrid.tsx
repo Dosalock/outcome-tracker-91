@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useCallTracker } from '@/hooks/useCallTracker';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useWindowSize } from '@/hooks/use-window-size';
 import { cn } from '@/lib/utils';
 import { CallOutcome, CallEntry } from '@/types/call-tracker';
 
@@ -25,6 +26,7 @@ interface SessionData {
 export const CallActivityGrid: React.FC = () => {
   const { calls, allHistoricalCalls } = useCallTracker();
   const { t } = useLanguage();
+  const { width } = useWindowSize();
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('quarter');
 
   const generateGridData = (): DayData[] | SessionData[] => {
@@ -145,9 +147,22 @@ export const CallActivityGrid: React.FC = () => {
       case 'quarter': return 'grid-cols-12'; 
       case 'month': return 'grid-cols-10';
       case 'week': return 'grid-cols-7';
-      case 'session': return 'grid-cols-10';
+      case 'session': return getResponsiveSessionCols();
       default: return 'grid-cols-12';
     }
+  };
+
+  const getResponsiveSessionCols = () => {
+    if (!width) return 10; // Default fallback
+    
+    // Calculate columns based on available width
+    // Each cell is ~16px (w-3 + gap) and we want some margin
+    const availableWidth = width - 200; // Account for card padding and margins
+    const cellWidth = 16; // w-3 (12px) + gap (4px)
+    const maxCols = Math.floor(availableWidth / cellWidth);
+    
+    // Clamp between reasonable bounds
+    return Math.max(8, Math.min(maxCols, 50));
   };
 
   // Group by weeks for display (only for non-session views)
@@ -187,7 +202,12 @@ export const CallActivityGrid: React.FC = () => {
             <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
               <span>Session calls (left to right, top to bottom):</span>
             </div>
-            <div className="grid grid-cols-10 gap-1 w-fit">
+            <div 
+              className="grid gap-1 w-full"
+              style={{
+                gridTemplateColumns: `repeat(${getResponsiveSessionCols()}, minmax(0, 1fr))`
+              }}
+            >
               {(gridData as SessionData[]).map((sessionData, index) => (
                 <div
                   key={index}
