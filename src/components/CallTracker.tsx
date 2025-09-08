@@ -185,35 +185,37 @@ export const CallTracker: React.FC = () => {
             </CardContent>
           </Card>
 
-                    <Card className="shadow-md">
+                              <Card className="shadow-md">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">{t('yes-ratio')}</p>
                   <p className="text-2xl font-bold text-success">{stats.yesRatio.toFixed(1)}%</p>
                 </div>
-                <div className="w-20 h-20 p-2 flex items-center justify-center"> {/* Added flex for centering */}
-                  <ChartContainer config={{ yes: { color: 'hsl(var(--success))' }, no: { color: 'hsl(var(--danger))' } }}>
-                    <ResponsiveContainer width="100%" height="100%"> {/* Changed to 100% */}
-                      <PieChart>
-                        <Pie
-                          data={yesNoData}
-                          dataKey="value"
-                          nameKey="name"
-                          cx="50%"
-                          cy="50%"
-                          outerRadius={28} /* Slightly reduced outerRadius */
-                          innerRadius={15} // Added innerRadius for a donut chart style
-                        >
-                          {yesNoData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.fill} />
-                          ))}
-                        </Pie>
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </ChartContainer>
-                </div>
+                {/* Changed the outer div to be the ChartContainer, giving it direct size */}
+                <ChartContainer
+                  config={{ yes: { color: 'hsl(var(--success))' }, no: { color: 'hsl(var(--danger))' } }}
+                  className="w-20 h-20" // Apply fixed size directly to ChartContainer
+                >
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={yesNoData}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={28 /* Slightly reduced outerRadius */}
+                        innerRadius={15} // Added innerRadius for a donut chart style
+                      >
+                        {yesNoData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                        ))}
+                      </Pie>
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
               </div>
             </CardContent>
           </Card>
@@ -225,28 +227,30 @@ export const CallTracker: React.FC = () => {
                   <p className="text-sm font-medium text-muted-foreground">{t('engagement-ratio')}</p>
                   <p className="text-2xl font-bold text-info">{stats.engagementRatio.toFixed(1)}%</p>
                 </div>
-                <div className="w-20 h-20 p-2 flex items-center justify-center"> {/* Added flex for centering */}
-                  <ChartContainer config={{ engaged: { color: 'hsl(var(--info))' }, notEngaged: { color: 'hsl(var(--neutral))' } }}>
-                    <ResponsiveContainer width="100%" height="100%"> {/* Changed to 100% */}
-                      <PieChart>
-                        <Pie
-                          data={engagementData}
-                          dataKey="value"
-                          nameKey="name"
-                          cx="50%" // Changed to 50% for centering
-                          cy="50%" // Changed to 50% for centering
-                          outerRadius={28} /* Slightly reduced outerRadius */
-                          innerRadius={15} // Added innerRadius for a donut chart style
-                        >
-                          {engagementData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.fill} />
-                          ))}
-                        </Pie>
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </ChartContainer>
-                </div>
+                {/* Changed the outer div to be the ChartContainer, giving it direct size */}
+                <ChartContainer
+                  config={{ engaged: { color: 'hsl(var(--info))' }, notEngaged: { color: 'hsl(var(--neutral))' } }}
+                  className="w-20 h-20" // Apply fixed size directly to ChartContainer
+                >
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={engagementData}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={28 /* Slightly reduced outerRadius */}
+                        innerRadius={15} // Added innerRadius for a donut chart style
+                      >
+                        {engagementData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                        ))}
+                      </Pie>
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
               </div>
             </CardContent>
           </Card>
