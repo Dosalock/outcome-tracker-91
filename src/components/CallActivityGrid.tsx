@@ -57,10 +57,14 @@ export const CallActivityGrid: React.FC<{ calls: CallEntry[] }> = ({ calls: curr
         break;
       case 'session':
         // Return individual calls for session view (up to 200 calls)
-        return currentSessionCalls.slice(0, 200).map((call, index) => ({ // Use currentSessionCalls here
-          call,
-          index
-        })) as SessionData[];
+        return currentSessionCalls
+  .slice(0, 200)
+  .map((call, index) => ({
+    call,
+    index
+  }))
+  .reverse() as SessionData[];
+
     }
     
     const gridData: DayData[] = [];
