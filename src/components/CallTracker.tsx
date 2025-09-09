@@ -4,7 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Trash2, Edit2, Phone, RotateCcw, Languages, Download } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { Input } from '@/components/ui/input';
+import { Trash2, Edit2, Phone, RotateCcw, Languages, Download, Upload } from 'lucide-react';
 import { useCallTracker } from '@/hooks/useCallTracker';
 import { CallOutcome } from '@/types/call-tracker';
 import { cn } from '@/lib/utils';
@@ -30,8 +32,9 @@ const getCallOutcomes = (t: (key: string) => string): { value: CallOutcome; labe
 ];
 
 export const CallTracker: React.FC = () => {
-  const { calls, addCall, updateCall, deleteCall, startNewSession, stats } = useCallTracker();
+  const { calls, addCall, updateCall, deleteCall, startNewSession, importFromCSV, importFromJSON, stats } = useCallTracker();
   const { language, setLanguage, t } = useLanguage();
+  const { toast } = useToast();
   const [notes, setNotes] = useState('');
   const [editingCall, setEditingCall] = useState<string | null>(null);
   const [editNotes, setEditNotes] = useState('');
@@ -86,6 +89,47 @@ export const CallTracker: React.FC = () => {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+  };
+
+  const handleFileImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = e.target?.result as string;
+      try {
+        if (file.type === 'text/csv' || file.name.endsWith('.csv')) {
+          importFromCSV(content);
+          toast({
+            title: "Import Successful",
+            description: "CSV data has been imported successfully.",
+          });
+        } else if (file.type === 'application/json' || file.name.endsWith('.json')) {
+          importFromJSON(content);
+          toast({
+            title: "Import Successful", 
+            description: "JSON data has been imported successfully.",
+          });
+        } else {
+          toast({
+            title: "Unsupported Format",
+            description: "Please select a CSV or JSON file.",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        toast({
+          title: "Import Failed",
+          description: "Failed to import data. Please check the file format.",
+          variant: "destructive",
+        });
+      }
+    };
+    reader.readAsText(file);
+    
+    // Reset input
+    event.target.value = '';
   };
 
   const getOutcomeConfig = (outcome: CallOutcome) => {
@@ -144,6 +188,25 @@ export const CallTracker: React.FC = () => {
               <Download className="h-4 w-4" />
               {t('export-csv')}
             </Button>
+            <div className="relative">
+              <Input
+                type="file"
+                accept=".csv,.json"
+                onChange={handleFileImport}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                id="file-import"
+              />
+              <Button
+                variant="outline"
+                className="flex items-center gap-2"
+                asChild
+              >
+                <label htmlFor="file-import" className="cursor-pointer">
+                  <Upload className="h-4 w-4" />
+                  Import
+                </label>
+              </Button>
+            </div>
             <Button 
               onClick={startNewSession}
               variant="outline"

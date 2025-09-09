@@ -201,6 +201,98 @@ export const useCallTracker = () => {
     };
   }, [calls]);
 
+  const importFromCSV = useCallback((csvContent: string) => {
+    const lines = csvContent.trim().split('\n');
+    if (lines.length < 2) return; // Need header + at least one data row
+    
+    const headers = lines[0].split(',');
+    const importedCalls: CallEntry[] = [];
+    
+    for (let i = 1; i < lines.length; i++) {
+      const values = lines[i].split(',');
+      if (values.length >= 2) {
+        const timeStr = values[0];
+        const outcomeStr = values[1];
+        const notesStr = values[2] ? values[2].replace(/"/g, '') : undefined;
+        
+        // Parse time - assuming format from export
+        const today = new Date();
+        const [time, period] = timeStr.split(' ');
+        const [hours, minutes] = time.split(':');
+        let hour = parseInt(hours);
+        if (period === 'PM' && hour !== 12) hour += 12;
+        if (period === 'AM' && hour === 12) hour = 0;
+        
+        const timestamp = new Date(today.getFullYear(), today.getMonth(), today.getDate(), hour, parseInt(minutes));
+        
+        // Find matching outcome
+        const outcome = Object.keys({
+          'yes-needs-confirmation': true,
+          'confirmed-sale': true,
+          'no': true,
+          'absolutely-no': true,
+          'hangup': true,
+          'call-later': true,
+          'call-in-2-months': true,
+          'sickness-medicine': true,
+          'already-customer': true,
+          'not-enough-money': true,
+          'language-difficulties': true,
+          'wrong-number': true,
+          'dnc': true,
+        }).find(key => outcomeStr.toLowerCase().includes(key.toLowerCase())) as CallOutcome;
+        
+        if (outcome) {
+          importedCalls.push({
+            id: `imported-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            outcome,
+            timestamp,
+            notes: notesStr
+          });
+        }
+      }
+    }
+    
+    setCalls(prevCalls => [...importedCalls, ...prevCalls]);
+  }, []);
+
+  const importFromJSON = useCallback((jsonContent: string) => {
+    try {
+      const data = JSON.parse(jsonContent);
+      const importedCalls: CallEntry[] = [];
+      
+      if (Array.isArray(data)) {
+        data.forEach((item: any) => {
+          if (item.outcome && item.timestamp) {
+            importedCalls.push({
+              id: item.id || `imported-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              outcome: item.outcome as CallOutcome,
+              timestamp: new Date(item.timestamp),
+              notes: item.notes
+            });
+          }
+        });
+      } else if (data.calls && Array.isArray(data.calls)) {
+        // Session format
+        data.calls.forEach((item: any) => {
+          if (item.outcome && item.timestamp) {
+            importedCalls.push({
+              id: item.id || `imported-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              outcome: item.outcome as CallOutcome,
+              timestamp: new Date(item.timestamp),
+              notes: item.notes
+            });
+          }
+        });
+      }
+      
+      setCalls(prevCalls => [...importedCalls, ...prevCalls]);
+    } catch (error) {
+      console.error('Error parsing JSON:', error);
+      throw new Error('Invalid JSON format');
+    }
+  }, []);
+
   return {
     calls,
     allHistoricalCalls,
@@ -209,6 +301,8 @@ export const useCallTracker = () => {
     updateCall,
     deleteCall,
     startNewSession,
+    importFromCSV,
+    importFromJSON,
     stats: calculateStats(),
   };
 };
