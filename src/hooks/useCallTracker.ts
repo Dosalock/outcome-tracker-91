@@ -1,9 +1,60 @@
 import { useState, useEffect, useCallback } from 'react';
 import { CallEntry, CallOutcome, CallStats, CallSession } from '@/types/call-tracker';
 
-const STORAGE_KEY = 'call-tracker-data';
 const CURRENT_SESSION_KEY = 'call-tracker-current-session';
-const HISTORICAL_DATA_KEY = 'call-tracker-historical-data';
+const SESSIONS_INDEX_KEY = 'call-tracker-sessions-index';
+
+// Helper functions for day-based storage
+const getDayKey = (date: Date) => {
+  return `call-tracker-day-${date.toISOString().split('T')[0]}`;
+};
+
+const getSessionKey = (sessionId: string) => {
+  return `call-tracker-session-${sessionId}`;
+};
+
+const loadAllHistoricalCalls = () => {
+  const sessionsIndex = localStorage.getItem(SESSIONS_INDEX_KEY);
+  if (!sessionsIndex) return [];
+
+  const sessionIds: string[] = JSON.parse(sessionsIndex);
+  const allCalls: CallEntry[] = [];
+
+  sessionIds.forEach(sessionId => {
+    const sessionData = localStorage.getItem(getSessionKey(sessionId));
+    if (sessionData) {
+      const session = JSON.parse(sessionData);
+      const calls = session.calls.map((call: any) => ({
+        ...call,
+        timestamp: new Date(call.timestamp)
+      }));
+      allCalls.push(...calls);
+    }
+  });
+
+  return allCalls;
+};
+
+const saveSessionToStorage = (session: CallSession) => {
+  // Save the session itself
+  const sessionToSave = {
+    ...session,
+    calls: session.calls.map(call => ({
+      ...call,
+      timestamp: call.timestamp.toISOString()
+    }))
+  };
+  localStorage.setItem(getSessionKey(session.id), JSON.stringify(sessionToSave));
+
+  // Update sessions index
+  const sessionsIndex = localStorage.getItem(SESSIONS_INDEX_KEY);
+  const sessionIds: string[] = sessionsIndex ? JSON.parse(sessionsIndex) : [];
+  
+  if (!sessionIds.includes(session.id)) {
+    sessionIds.push(session.id);
+    localStorage.setItem(SESSIONS_INDEX_KEY, JSON.stringify(sessionIds));
+  }
+};
 
 export const useCallTracker = () => {
   const [currentSession, setCurrentSession] = useState<CallSession | null>(null);
@@ -12,15 +63,9 @@ export const useCallTracker = () => {
 
   // Load data from localStorage on mount
   useEffect(() => {
-    // Load historical data
-    const savedHistoricalData = localStorage.getItem(HISTORICAL_DATA_KEY);
-    if (savedHistoricalData) {
-      const historicalCalls = JSON.parse(savedHistoricalData).map((call: any) => ({
-        ...call,
-        timestamp: new Date(call.timestamp)
-      }));
-      setAllHistoricalCalls(historicalCalls);
-    }
+    // Load all historical calls from all sessions
+    const historicalCalls = loadAllHistoricalCalls();
+    setAllHistoricalCalls(historicalCalls);
 
     const savedSession = localStorage.getItem(CURRENT_SESSION_KEY);
     if (savedSession) {
@@ -44,44 +89,28 @@ export const useCallTracker = () => {
   // Save to localStorage whenever calls change
   useEffect(() => {
     if (currentSession) {
-      const sessionToSave = {
+      const sessionWithCalls = {
         ...currentSession,
+        calls: calls
+      };
+      
+      // Save current session
+      localStorage.setItem(CURRENT_SESSION_KEY, JSON.stringify({
+        ...sessionWithCalls,
         calls: calls.map(call => ({
           ...call,
           timestamp: call.timestamp.toISOString()
         }))
-      };
-      localStorage.setItem(CURRENT_SESSION_KEY, JSON.stringify(sessionToSave));
+      }));
+
+      // Save session to permanent storage
+      saveSessionToStorage(sessionWithCalls);
+
+      // Update all historical calls
+      const updatedHistoricalCalls = loadAllHistoricalCalls();
+      setAllHistoricalCalls(updatedHistoricalCalls);
     }
   }, [calls, currentSession]);
-
-  // Update historical data whenever calls change
-  useEffect(() => {
-    if (calls.length > 0) {
-      // Load existing historical data
-      const savedHistoricalData = localStorage.getItem(HISTORICAL_DATA_KEY);
-      const existingHistoricalCalls = savedHistoricalData 
-        ? JSON.parse(savedHistoricalData).map((call: any) => ({
-            ...call,
-            timestamp: new Date(call.timestamp)
-          }))
-        : [];
-
-      // Merge current session calls with historical data
-      const allCalls = [...existingHistoricalCalls, ...calls];
-      const uniqueCalls = allCalls.filter((call, index, self) => 
-        self.findIndex(c => c.id === call.id) === index
-      );
-      
-      setAllHistoricalCalls(uniqueCalls);
-      localStorage.setItem(HISTORICAL_DATA_KEY, JSON.stringify(
-        uniqueCalls.map(call => ({
-          ...call,
-          timestamp: call.timestamp.toISOString()
-        }))
-      ));
-    }
-  }, [calls]);
 
   const startNewSession = useCallback(() => {
     const newSession: CallSession = {
