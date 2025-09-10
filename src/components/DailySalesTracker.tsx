@@ -20,10 +20,10 @@ export const DailySalesTracker: React.FC<DailySalesTrackerProps> = ({ calls }) =
   const { t } = useLanguage();
 
   const timeSlots: DailyTimeSlot[] = [
-    { period: 'Morning', startTime: '09:00', endTime: '10:50', sales: [], targetSlots: 2 },
-    { period: 'Late Morning', startTime: '10:50', endTime: '12:45', sales: [], targetSlots: 1 },
-    { period: 'Afternoon', startTime: '12:45', endTime: '15:30', sales: [], targetSlots: 1 },
-    { period: 'Late Afternoon', startTime: '15:30', endTime: '17:30', sales: [], targetSlots: 1 }
+    { period: '1', startTime: '09:00', endTime: '10:50', sales: [], targetSlots: 2 },
+    { period: '2', startTime: '10:50', endTime: '12:45', sales: [], targetSlots: 1 },
+    { period: '3', startTime: '12:45', endTime: '15:30', sales: [], targetSlots: 1 },
+    { period: '4', startTime: '15:30', endTime: '17:30', sales: [], targetSlots: 1 }
   ];
 
   // Populate sales for each time slot
@@ -80,56 +80,58 @@ export const DailySalesTracker: React.FC<DailySalesTrackerProps> = ({ calls }) =
             const totalBoxes = Math.max(targetSlots, actualSales);
             
             return (
-              <div key={slotIndex} className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium">
-                    {slot.period}
-                  </span>
+              <div key={slotIndex} className="flex items-center space-x-2">
+                <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xs font-medium">
+                      {slot.period}
+                    </span>
+                    <div className="flex flex-wrap gap-1">
+                      {Array.from({ length: totalBoxes }, (_, boxIndex) => {
+                        let boxStyle = "";
+                        let content = "";
+                        let title = "";
+                        
+                        if (boxIndex < actualSales) {
+                          // Actual sale
+                          boxStyle = "border-success bg-success text-success-foreground";
+                          content = "✓";
+                          title = `Sale ${boxIndex + 1} at ${slot.sales[boxIndex].timestamp.toTimeString().slice(0, 5)}`;
+                        } else if (boxIndex < targetSlots && boxIndex - actualSales < extraGreenBoxes) {
+                          // Overflow indicator (translucent green)
+                          boxStyle = "border-success/50 bg-success/20 text-success-foreground/70";
+                          content = "○";
+                          title = "Goal completed in previous period";
+                        } else if (boxIndex < targetSlots) {
+                          // Available slot
+                          boxStyle = "border-muted-foreground/30 bg-background text-muted-foreground/50";
+                          content = (boxIndex + 1).toString();
+                          title = "Available slot";
+                        } else {
+                          // Overflow sale
+                          boxStyle = "border-success bg-success text-success-foreground";
+                          content = "✓";
+                          title = `Overflow sale ${boxIndex - targetSlots + 1}`;
+                        }
+                        
+                        return (
+                          <div
+                            key={boxIndex}
+                            className={cn(
+                              "w-6 h-6 border-2 border-dashed rounded-sm flex items-center justify-center text-xs font-bold transition-all",
+                              boxStyle
+                            )}
+                            title={title}
+                          >
+                            {content}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
                   <span className="text-xs text-muted-foreground">
                     {slot.sales.length}/{slot.targetSlots}
                   </span>
-                </div>
-                <div className="flex flex-wrap gap-1">
-                  {Array.from({ length: totalBoxes }, (_, boxIndex) => {
-                    let boxStyle = "";
-                    let content = "";
-                    let title = "";
-                    
-                    if (boxIndex < actualSales) {
-                      // Actual sale
-                      boxStyle = "border-success bg-success text-success-foreground";
-                      content = "✓";
-                      title = `Sale ${boxIndex + 1} at ${slot.sales[boxIndex].timestamp.toTimeString().slice(0, 5)}`;
-                    } else if (boxIndex < targetSlots && boxIndex - actualSales < extraGreenBoxes) {
-                      // Overflow indicator (translucent green)
-                      boxStyle = "border-success/50 bg-success/20 text-success-foreground/70";
-                      content = "○";
-                      title = "Goal completed in previous period";
-                    } else if (boxIndex < targetSlots) {
-                      // Available slot
-                      boxStyle = "border-muted-foreground/30 bg-background text-muted-foreground/50";
-                      content = (boxIndex + 1).toString();
-                      title = "Available slot";
-                    } else {
-                      // Overflow sale
-                      boxStyle = "border-success bg-success text-success-foreground";
-                      content = "✓";
-                      title = `Overflow sale ${boxIndex - targetSlots + 1}`;
-                    }
-                    
-                    return (
-                      <div
-                        key={boxIndex}
-                        className={cn(
-                          "w-6 h-6 border-2 border-dashed rounded-sm flex items-center justify-center text-xs font-bold transition-all",
-                          boxStyle
-                        )}
-                        title={title}
-                      >
-                        {content}
-                      </div>
-                    );
-                  })}
                 </div>
               </div>
             );
