@@ -70,12 +70,13 @@ export const CallTracker: React.FC = () => {
       return;
     }
 
-    const headers = ['Time', 'Outcome', 'Notes'];
+    const headers = ['Date', 'Time', 'Outcome', 'Notes'];
     const csvData = [
       headers.join(','),
       ...todaysCalls.map(call => [
+        call.timestamp.toISOString().split('T')[0],
         call.timestamp.toLocaleTimeString(),
-        getOutcomeConfig(call.outcome).label,
+        call.outcome,
         `"${call.notes || ''}"`
       ].join(','))
     ].join('\n');

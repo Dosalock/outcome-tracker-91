@@ -205,42 +205,72 @@ export const useCallTracker = () => {
     const lines = csvContent.trim().split('\n');
     if (lines.length < 2) return; // Need header + at least one data row
     
-    const headers = lines[0].split(',');
+    const headers = lines[0].split(',').map(h => h.trim());
     const importedCalls: CallEntry[] = [];
     
     for (let i = 1; i < lines.length; i++) {
       const values = lines[i].split(',');
-      if (values.length >= 2) {
-        const timeStr = values[0];
-        const outcomeStr = values[1];
-        const notesStr = values[2] ? values[2].replace(/"/g, '') : undefined;
+      if (values.length >= 3) {
+        let dateStr, timeStr, outcomeStr, notesStr;
         
-        // Parse time - assuming format from export
-        const today = new Date();
-        const [time, period] = timeStr.split(' ');
-        const [hours, minutes] = time.split(':');
-        let hour = parseInt(hours);
-        if (period === 'PM' && hour !== 12) hour += 12;
-        if (period === 'AM' && hour === 12) hour = 0;
+        // Check if we have the new format with Date column
+        if (headers.includes('Date')) {
+          dateStr = values[0];
+          timeStr = values[1];
+          outcomeStr = values[2];
+          notesStr = values[3] ? values[3].replace(/"/g, '') : undefined;
+        } else {
+          // Old format without Date column
+          timeStr = values[0];
+          outcomeStr = values[1];
+          notesStr = values[2] ? values[2].replace(/"/g, '') : undefined;
+          dateStr = new Date().toISOString().split('T')[0]; // Default to today
+        }
         
-        const timestamp = new Date(today.getFullYear(), today.getMonth(), today.getDate(), hour, parseInt(minutes));
+        // Parse timestamp
+        let timestamp: Date;
+        if (dateStr && dateStr !== timeStr) {
+          // New format with separate date and time
+          const date = new Date(dateStr);
+          const [time, period] = timeStr.split(' ');
+          const [hours, minutes] = time.split(':');
+          let hour = parseInt(hours);
+          if (period === 'PM' && hour !== 12) hour += 12;
+          if (period === 'AM' && hour === 12) hour = 0;
+          
+          timestamp = new Date(date.getFullYear(), date.getMonth(), date.getDate(), hour, parseInt(minutes));
+        } else {
+          // Old format with just time
+          const today = new Date();
+          const [time, period] = timeStr.split(' ');
+          const [hours, minutes] = time.split(':');
+          let hour = parseInt(hours);
+          if (period === 'PM' && hour !== 12) hour += 12;
+          if (period === 'AM' && hour === 12) hour = 0;
+          
+          timestamp = new Date(today.getFullYear(), today.getMonth(), today.getDate(), hour, parseInt(minutes));
+        }
         
-        // Find matching outcome
-        const outcome = Object.keys({
-          'yes-needs-confirmation': true,
-          'confirmed-sale': true,
-          'no': true,
-          'absolutely-no': true,
-          'hangup': true,
-          'call-later': true,
-          'call-in-2-months': true,
-          'sickness-medicine': true,
-          'already-customer': true,
-          'not-enough-money': true,
-          'language-difficulties': true,
-          'wrong-number': true,
-          'dnc': true,
-        }).find(key => outcomeStr.toLowerCase().includes(key.toLowerCase())) as CallOutcome;
+        // Find matching outcome - now use exact match first, then fallback to contains
+        let outcome = outcomeStr as CallOutcome;
+        if (!['yes-needs-confirmation', 'confirmed-sale', 'no', 'absolutely-no', 'hangup', 'call-later', 'call-in-2-months', 'sickness-medicine', 'already-customer', 'not-enough-money', 'language-difficulties', 'wrong-number', 'dnc'].includes(outcome)) {
+          // Fallback to partial matching for translated labels
+          outcome = Object.keys({
+            'yes-needs-confirmation': true,
+            'confirmed-sale': true,
+            'no': true,
+            'absolutely-no': true,
+            'hangup': true,
+            'call-later': true,
+            'call-in-2-months': true,
+            'sickness-medicine': true,
+            'already-customer': true,
+            'not-enough-money': true,
+            'language-difficulties': true,
+            'wrong-number': true,
+            'dnc': true,
+          }).find(key => outcomeStr.toLowerCase().includes(key.toLowerCase())) as CallOutcome;
+        }
         
         if (outcome) {
           importedCalls.push({
