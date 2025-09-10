@@ -7,7 +7,7 @@ import { useWindowSize } from '@/hooks/use-window-size';
 import { cn } from '@/lib/utils';
 import { CallOutcome, CallEntry } from '@/types/call-tracker';
 
-type TimePeriod = 'year' | 'quarter' | 'month' | 'week' | 'session';
+type TimePeriod = 'year' | 'quarter' | 'month' | 'week' | 'session' | 'daily';
 
 interface DayData {
   date: Date;
@@ -23,20 +23,27 @@ interface SessionData {
   index: number;
 }
 
+interface DailyTimeSlot {
+  period: string;
+  startTime: string;
+  endTime: string;
+  sales: CallEntry[];
+}
+
 export const CallActivityGrid: React.FC<{ calls: CallEntry[] }> = ({ calls: currentSessionCalls }) => { // Renamed prop to avoid conflict
   const { allHistoricalCalls } = useCallTracker(); // Removed 'calls' from here
   const { t } = useLanguage();
   const { width } = useWindowSize();
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('quarter');
 
-  const generateGridData = useMemo((): DayData[] | SessionData[] => {
+  const generateGridData = useMemo((): DayData[] | SessionData[] | DailyTimeSlot[] => {
     console.log('CallActivityGrid: Generating grid data, currentSessionCalls length:', currentSessionCalls.length, 'historical calls length:', allHistoricalCalls.length);
     const today = new Date();
     let startDate = new Date(today);
     let days = 84; // Default for quarter
     
     // Use historical data for long-term views, current session for session view
-    const dataSource = timePeriod === 'session' ? currentSessionCalls : allHistoricalCalls; // Use currentSessionCalls here
+    const dataSource = timePeriod === 'session' ? currentSessionCalls : allHistoricalCalls;
     
     switch (timePeriod) {
       case 'year':
@@ -58,13 +65,35 @@ export const CallActivityGrid: React.FC<{ calls: CallEntry[] }> = ({ calls: curr
       case 'session':
         // Return individual calls for session view (up to 200 calls)
         return currentSessionCalls
-  .slice(0, 200)       // take first 200
-  .slice()             // clone to avoid mutating original
-  .reverse()           // reverse order
-  .map((call, index) => ({
-    call,
-    index
-  })) as SessionData[];
+          .slice(0, 200)
+          .slice()
+          .reverse()
+          .map((call, index) => ({
+            call,
+            index
+          })) as SessionData[];
+      case 'daily':
+        // Return daily time slots with confirmed sales
+        const timeSlots = [
+          { period: 'Morning', startTime: '09:00', endTime: '10:50' },
+          { period: 'Late Morning', startTime: '10:50', endTime: '12:45' },
+          { period: 'Afternoon', startTime: '12:45', endTime: '15:30' },
+          { period: 'Late Afternoon', startTime: '15:30', endTime: '17:30' }
+        ];
+        
+        return timeSlots.map(slot => {
+          const todaysSales = currentSessionCalls.filter(call => {
+            if (call.outcome !== 'confirmed-sale') return false;
+            
+            const callTime = call.timestamp.toTimeString().slice(0, 5);
+            return callTime >= slot.startTime && callTime < slot.endTime;
+          });
+          
+          return {
+            ...slot,
+            sales: todaysSales
+          };
+        }) as DailyTimeSlot[];
     }
     
     const gridData: DayData[] = [];
@@ -72,6 +101,13 @@ export const CallActivityGrid: React.FC<{ calls: CallEntry[] }> = ({ calls: curr
     for (let i = 0; i < days; i++) {
       const currentDate = new Date(startDate);
       currentDate.setDate(startDate.getDate() + i);
+      
+      // Adjust to start weeks on Monday
+      if (i === 0 && (timePeriod === 'quarter' || timePeriod === 'year')) {
+        const dayOfWeek = currentDate.getDay();
+        const mondayOffset = dayOfWeek === 0 ? -6 : -(dayOfWeek - 1);
+        currentDate.setDate(currentDate.getDate() + mondayOffset);
+      }
       
       const daysCalls = dataSource.filter(call => 
         call.timestamp.toDateString() === currentDate.toDateString()
@@ -103,6 +139,7 @@ export const CallActivityGrid: React.FC<{ calls: CallEntry[] }> = ({ calls: curr
 
   const gridData = generateGridData;
   const isSessionView = timePeriod === 'session';
+  const isDailyView = timePeriod === 'daily';
   
   const getOutcomeColor = (outcome: CallOutcome) => {
     switch (outcome) {
@@ -186,7 +223,7 @@ export const CallActivityGrid: React.FC<{ calls: CallEntry[] }> = ({ calls: curr
           <span>{t('call-activity')}</span>
           <div className="flex items-center gap-2">
             <div className="flex gap-1">
-              {(['year', 'quarter', 'month', 'week', 'session'] as TimePeriod[]).map(period => (
+              {(['year', 'quarter', 'month', 'week', 'session', 'daily'] as TimePeriod[]).map(period => (
                 <Button
                   key={period}
                   variant={timePeriod === period ? 'default' : 'outline'}
@@ -202,7 +239,47 @@ export const CallActivityGrid: React.FC<{ calls: CallEntry[] }> = ({ calls: curr
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {isSessionView ? (
+        {isDailyView ? (
+          <div className="space-y-4">
+            <div className="text-sm text-muted-foreground mb-4">
+              Today's Sales by Time Period
+            </div>
+            <div className="grid grid-cols-1 gap-4">
+              {(gridData as DailyTimeSlot[]).map((slot, slotIndex) => (
+                <div key={slotIndex} className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">
+                      {slot.period} ({slot.startTime} - {slot.endTime})
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {slot.sales.length} sales
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {/* Always show at least 2 boxes */}
+                    {Array.from({ length: Math.max(2, slot.sales.length + 1) }, (_, boxIndex) => (
+                      <div
+                        key={boxIndex}
+                        className={cn(
+                          "w-8 h-8 border-2 border-dashed rounded-sm flex items-center justify-center text-xs font-bold transition-all",
+                          boxIndex < slot.sales.length 
+                            ? "border-success bg-success text-success-foreground" 
+                            : "border-muted-foreground/30 bg-background text-muted-foreground/50"
+                        )}
+                        title={boxIndex < slot.sales.length 
+                          ? `Sale ${boxIndex + 1} at ${slot.sales[boxIndex].timestamp.toTimeString().slice(0, 5)}`
+                          : "Available slot"
+                        }
+                      >
+                        {boxIndex < slot.sales.length ? "✓" : boxIndex + 1}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : isSessionView ? (
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
               <span>Session calls (left to right, top to bottom):</span>
@@ -246,19 +323,26 @@ export const CallActivityGrid: React.FC<{ calls: CallEntry[] }> = ({ calls: curr
               </div>
             </div>
 
-            {/* Month labels */}
-            {(timePeriod === 'year' || timePeriod === 'quarter') && (
+            {/* Month labels for year view - improved legibility */}
+            {timePeriod === 'year' && (
               <div className="grid grid-cols-[auto_1fr] gap-2 text-xs text-muted-foreground mb-2">
                 <div className="w-8"></div>
-                <div className={cn("grid gap-1", getGridCols())}>
-                  {timePeriod === 'year' 
-                    ? ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map(month => (
-                        <div key={month} className="text-center">{month}</div>
-                      ))
-                    : Array.from({ length: 12 }, (_, i) => (
-                        <div key={i} className="text-center">{i + 1}</div>
-                      ))
-                  }
+                <div className="grid grid-cols-12 gap-1">
+                  {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map(month => (
+                    <div key={month} className="text-center font-medium">{month}</div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {/* Week labels for quarter view */}
+            {timePeriod === 'quarter' && (
+              <div className="grid grid-cols-[auto_1fr] gap-2 text-xs text-muted-foreground mb-2">
+                <div className="w-8"></div>
+                <div className="grid grid-cols-12 gap-1">
+                  {Array.from({ length: 12 }, (_, i) => (
+                    <div key={i} className="text-center">W{i + 1}</div>
+                  ))}
                 </div>
               </div>
             )}
