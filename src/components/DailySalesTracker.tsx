@@ -72,7 +72,7 @@ export const DailySalesTracker: React.FC<DailySalesTrackerProps> = ({ calls }) =
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-3">
+        <div className="space-y-1">
           {populatedSlots.map((slot, slotIndex) => {
             const extraGreenBoxes = getExtraGreenBoxes(slotIndex);
             const actualSales = slot.sales.length;
