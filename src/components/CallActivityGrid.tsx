@@ -6,8 +6,9 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useWindowSize } from '@/hooks/use-window-size';
 import { cn } from '@/lib/utils';
 import { CallOutcome, CallEntry } from '@/types/call-tracker';
+import { DailySalesTracker } from './DailySalesTracker';
 
-type TimePeriod = 'year' | 'quarter' | 'month' | 'week' | 'session' | 'daily';
+type TimePeriod = 'year' | 'quarter' | 'month' | 'week' | 'session';
 
 interface DayData {
   date: Date;
@@ -23,12 +24,6 @@ interface SessionData {
   index: number;
 }
 
-interface DailyTimeSlot {
-  period: string;
-  startTime: string;
-  endTime: string;
-  sales: CallEntry[];
-}
 
 export const CallActivityGrid: React.FC<{ calls: CallEntry[] }> = ({ calls: currentSessionCalls }) => { // Renamed prop to avoid conflict
   const { allHistoricalCalls } = useCallTracker(); // Removed 'calls' from here
@@ -36,7 +31,7 @@ export const CallActivityGrid: React.FC<{ calls: CallEntry[] }> = ({ calls: curr
   const { width } = useWindowSize();
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('quarter');
 
-  const generateGridData = useMemo((): DayData[] | SessionData[] | DailyTimeSlot[] => {
+  const generateGridData = useMemo((): DayData[] | SessionData[] => {
     console.log('CallActivityGrid: Generating grid data, currentSessionCalls length:', currentSessionCalls.length, 'historical calls length:', allHistoricalCalls.length);
     const today = new Date();
     let startDate = new Date(today);
@@ -72,28 +67,6 @@ export const CallActivityGrid: React.FC<{ calls: CallEntry[] }> = ({ calls: curr
             call,
             index
           })) as SessionData[];
-      case 'daily':
-        // Return daily time slots with confirmed sales
-        const timeSlots = [
-          { period: 'Morning', startTime: '09:00', endTime: '10:50' },
-          { period: 'Late Morning', startTime: '10:50', endTime: '12:45' },
-          { period: 'Afternoon', startTime: '12:45', endTime: '15:30' },
-          { period: 'Late Afternoon', startTime: '15:30', endTime: '17:30' }
-        ];
-        
-        return timeSlots.map(slot => {
-          const todaysSales = currentSessionCalls.filter(call => {
-            if (call.outcome !== 'confirmed-sale') return false;
-            
-            const callTime = call.timestamp.toTimeString().slice(0, 5);
-            return callTime >= slot.startTime && callTime < slot.endTime;
-          });
-          
-          return {
-            ...slot,
-            sales: todaysSales
-          };
-        }) as DailyTimeSlot[];
     }
     
     const gridData: DayData[] = [];
@@ -139,7 +112,6 @@ export const CallActivityGrid: React.FC<{ calls: CallEntry[] }> = ({ calls: curr
 
   const gridData = generateGridData;
   const isSessionView = timePeriod === 'session';
-  const isDailyView = timePeriod === 'daily';
   
   const getOutcomeColor = (outcome: CallOutcome) => {
     switch (outcome) {
@@ -217,69 +189,31 @@ export const CallActivityGrid: React.FC<{ calls: CallEntry[] }> = ({ calls: curr
   }
 
   return (
-    <Card className="shadow-md">
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span>{t('call-activity')}</span>
-          <div className="flex items-center gap-2">
-            <div className="flex gap-1">
-              {(['year', 'quarter', 'month', 'week', 'session', 'daily'] as TimePeriod[]).map(period => (
-                <Button
-                  key={period}
-                  variant={timePeriod === period ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setTimePeriod(period)}
-                  className="h-7 px-2 text-xs"
-                >
-                  {period.charAt(0).toUpperCase() + period.slice(1)}
-                </Button>
-              ))}
-            </div>
-          </div>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {isDailyView ? (
-          <div className="space-y-4">
-            <div className="text-sm text-muted-foreground mb-4">
-              Today's Sales by Time Period
-            </div>
-            <div className="grid grid-cols-1 gap-4">
-              {(gridData as DailyTimeSlot[]).map((slot, slotIndex) => (
-                <div key={slotIndex} className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">
-                      {slot.period} ({slot.startTime} - {slot.endTime})
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {slot.sales.length} sales
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap gap-1">
-                    {/* Always show at least 2 boxes */}
-                    {Array.from({ length: Math.max(2, slot.sales.length + 1) }, (_, boxIndex) => (
-                      <div
-                        key={boxIndex}
-                        className={cn(
-                          "w-8 h-8 border-2 border-dashed rounded-sm flex items-center justify-center text-xs font-bold transition-all",
-                          boxIndex < slot.sales.length 
-                            ? "border-success bg-success text-success-foreground" 
-                            : "border-muted-foreground/30 bg-background text-muted-foreground/50"
-                        )}
-                        title={boxIndex < slot.sales.length 
-                          ? `Sale ${boxIndex + 1} at ${slot.sales[boxIndex].timestamp.toTimeString().slice(0, 5)}`
-                          : "Available slot"
-                        }
-                      >
-                        {boxIndex < slot.sales.length ? "✓" : boxIndex + 1}
-                      </div>
-                    ))}
-                  </div>
+    <div className="flex gap-4">
+      <div className="flex-1">
+        <Card className="shadow-md">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span>{t('call-activity')}</span>
+              <div className="flex items-center gap-2">
+                <div className="flex gap-1">
+                  {(['year', 'quarter', 'month', 'week', 'session'] as TimePeriod[]).map(period => (
+                    <Button
+                      key={period}
+                      variant={timePeriod === period ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setTimePeriod(period)}
+                      className="h-7 px-2 text-xs"
+                    >
+                      {period.charAt(0).toUpperCase() + period.slice(1)}
+                    </Button>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
-        ) : isSessionView ? (
+              </div>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isSessionView ? (
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
               <span>Session calls (left to right, top to bottom):</span>
@@ -396,9 +330,14 @@ export const CallActivityGrid: React.FC<{ calls: CallEntry[] }> = ({ calls: curr
                 )}
               </div>
             </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+            </div>
+          )}
+          </CardContent>
+        </Card>
+      </div>
+      <div className="w-80">
+        <DailySalesTracker calls={currentSessionCalls} />
+      </div>
+    </div>
   );
 };
