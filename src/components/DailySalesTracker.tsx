@@ -66,7 +66,7 @@ export const DailySalesTracker: React.FC<DailySalesTrackerProps> = ({ calls }) =
 
   return (
     <Card className="shadow-md">
-      <CardHeader>
+      <CardHeader className="p-4">
         <CardTitle className="text-sm">
           Today's Sales Tracker
         </CardTitle>
