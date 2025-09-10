@@ -193,9 +193,9 @@ export const CallActivityGrid: React.FC<{ calls: CallEntry[] }> = ({ calls: curr
       <div className="flex-1">
         <Card className="shadow-md">
           <CardHeader>
-            <CardTitle className="flex items-center justify-between">
+            <CardTitle className="flex items-left justify-between">
               <span>{t('call-activity')}</span>
-              <div className="flex items-center gap-2">
+              <div className="flex items-right gap-2">
                 <div className="flex gap-1">
                   {(['year', 'quarter', 'month', 'week', 'session'] as TimePeriod[]).map(period => (
                     <Button
