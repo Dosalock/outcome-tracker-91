@@ -283,7 +283,31 @@ export const useCallTracker = () => {
       }
     }
     
-    setCalls(prevCalls => [...importedCalls, ...prevCalls]);
+    // Group calls by date and create sessions
+    const callsByDate = new Map<string, CallEntry[]>();
+    importedCalls.forEach(call => {
+      const dateKey = call.timestamp.toISOString().split('T')[0];
+      if (!callsByDate.has(dateKey)) {
+        callsByDate.set(dateKey, []);
+      }
+      callsByDate.get(dateKey)!.push(call);
+    });
+
+    // Create and save sessions for each date
+    callsByDate.forEach((dateCalls, dateKey) => {
+      const sessionDate = new Date(dateKey);
+      const importedSession: CallSession = {
+        id: `imported-${dateKey}-${Date.now()}`,
+        calls: dateCalls.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime()),
+        startTime: sessionDate,
+        endTime: new Date(sessionDate.getTime() + 24 * 60 * 60 * 1000 - 1), // End of day
+      };
+      saveSessionToStorage(importedSession);
+    });
+
+    // Reload historical calls to include imported data
+    const updatedHistoricalCalls = loadAllHistoricalCalls();
+    setAllHistoricalCalls(updatedHistoricalCalls);
   }, []);
 
   const importFromJSON = useCallback((jsonContent: string) => {
@@ -316,7 +340,31 @@ export const useCallTracker = () => {
         });
       }
       
-      setCalls(prevCalls => [...importedCalls, ...prevCalls]);
+      // Group calls by date and create sessions
+      const callsByDate = new Map<string, CallEntry[]>();
+      importedCalls.forEach(call => {
+        const dateKey = call.timestamp.toISOString().split('T')[0];
+        if (!callsByDate.has(dateKey)) {
+          callsByDate.set(dateKey, []);
+        }
+        callsByDate.get(dateKey)!.push(call);
+      });
+
+      // Create and save sessions for each date
+      callsByDate.forEach((dateCalls, dateKey) => {
+        const sessionDate = new Date(dateKey);
+        const importedSession: CallSession = {
+          id: `imported-${dateKey}-${Date.now()}`,
+          calls: dateCalls.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime()),
+          startTime: sessionDate,
+          endTime: new Date(sessionDate.getTime() + 24 * 60 * 60 * 1000 - 1), // End of day
+        };
+        saveSessionToStorage(importedSession);
+      });
+
+      // Reload historical calls to include imported data
+      const updatedHistoricalCalls = loadAllHistoricalCalls();
+      setAllHistoricalCalls(updatedHistoricalCalls);
     } catch (error) {
       console.error('Error parsing JSON:', error);
       throw new Error('Invalid JSON format');
