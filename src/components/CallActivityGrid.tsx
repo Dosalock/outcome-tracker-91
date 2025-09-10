@@ -219,7 +219,7 @@ export const CallActivityGrid: React.FC<{ calls: CallEntry[] }> = ({ calls: curr
               <span>Session calls (left to right, top to bottom):</span>
             </div>
             <div 
-              className="grid gap-1 w-full"
+              className="grid gap-2 w-full"
               style={{
                 gridTemplateColumns: `repeat(${getResponsiveSessionCols()}, minmax(0, 1fr))`
               }}
