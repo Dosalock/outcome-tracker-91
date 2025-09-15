@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useRef, useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useCallTracker } from '@/hooks/useCallTracker';
@@ -168,11 +168,11 @@ export const CallActivityGrid: React.FC<{ calls: CallEntry[] }> = ({ calls: curr
 
   const getResponsiveSessionCols = () => {
     if (!width) return 10; // Default fallback
-    
+    const ref = useRef(null);
     // Calculate columns based on available width
     // Each cell is ~16px (w-3 + gap) and we want some margin
-    const availableWidth = width - 200; // Account for card padding and margins
-    const cellWidth = 20; // w-3 (12px) + gap (4px)
+    const availableWidth = ref.current.width(); // Account for card padding and margins
+    const cellWidth = 16; // w-3 (12px) + gap (4px)
     const maxCols = Math.floor(availableWidth / cellWidth);
     
     // Clamp between reasonable bounds
