@@ -29,7 +29,7 @@ export const CallActivityGrid: React.FC<{ calls: CallEntry[] }> = ({ calls: curr
   const { t } = useLanguage();
   const { width } = useWindowSize();
   const containerRef = useRef(null);
-  const [timePeriod, setTimePeriod] = useState<TimePeriod>('quarter');
+  const [timePeriod, setTimePeriod] = useState<TimePeriod>('month');
   const [sessionCols, setSessionCols] = useState(20); // State to store computed columns
 
   // Calculate responsive columns when container size changes
