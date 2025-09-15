@@ -29,6 +29,7 @@ export const CallActivityGrid: React.FC<{ calls: CallEntry[] }> = ({ calls: curr
   const { allHistoricalCalls } = useCallTracker(); // Removed 'calls' from here
   const { t } = useLanguage();
   const { width } = useWindowSize();
+  const constRef = useRef(null);
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('quarter');
 
   const generateGridData = useMemo((): DayData[] | SessionData[] => {
@@ -166,16 +167,13 @@ export const CallActivityGrid: React.FC<{ calls: CallEntry[] }> = ({ calls: curr
     }
   };
 
-  const getResponsiveSessionCols = () => {
-    if (!width) return 10; // Default fallback
-    const ref = useRef(null);
-    // Calculate columns based on available width
-    // Each cell is ~16px (w-3 + gap) and we want some margin
-    const availableWidth = ref.current.width(); // Account for card padding and margins
-    const cellWidth = 16; // w-3 (12px) + gap (4px)
+  const getResponsiveSessionCols = (ref) => {
+    if (!ref?.current) return 10;
+    
+    const availableWidth = ref.current.offsetWidth;
+    const cellWidth = 16;
     const maxCols = Math.floor(availableWidth / cellWidth);
     
-    // Clamp between reasonable bounds
     return Math.max(8, Math.min(maxCols, 50));
   };
 
@@ -189,7 +187,7 @@ export const CallActivityGrid: React.FC<{ calls: CallEntry[] }> = ({ calls: curr
   }
 
   return (
-    <div className="flex gap-4">
+    <div ref={containerRef} className="flex gap-4">
       <div className="flex-1">
         <Card className="shadow-md">
           <CardHeader>
