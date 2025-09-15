@@ -240,8 +240,8 @@ export const CallActivityGrid: React.FC<{ calls: CallEntry[] }> = ({ calls: curr
           </CardHeader>
           <CardContent>
             {isSessionView ? (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-1 text-xs text-muted-foreground mb-4">
                   <span>Session calls (left to right, top to bottom):</span>
                 </div>
                 <div 
