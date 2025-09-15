@@ -29,7 +29,7 @@ export const CallActivityGrid: React.FC<{ calls: CallEntry[] }> = ({ calls: curr
   const { allHistoricalCalls } = useCallTracker(); // Removed 'calls' from here
   const { t } = useLanguage();
   const { width } = useWindowSize();
-  const constRef = useRef(null);
+  const containerRef = useRef(null);
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('quarter');
 
   const generateGridData = useMemo((): DayData[] | SessionData[] => {
@@ -162,7 +162,7 @@ export const CallActivityGrid: React.FC<{ calls: CallEntry[] }> = ({ calls: curr
       case 'quarter': return 'grid-cols-12'; 
       case 'month': return 'grid-cols-10';
       case 'week': return 'grid-cols-7';
-      case 'session': return getResponsiveSessionCols();
+      case 'session': return getResponsiveSessionCols(containerRef);
       default: return 'grid-cols-12';
     }
   };
