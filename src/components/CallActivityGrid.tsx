@@ -38,7 +38,7 @@ export const CallActivityGrid: React.FC<{ calls: CallEntry[] }> = ({ calls: curr
       if (!containerRef.current) return 20; // Default fallback
       
       const availableWidth = containerRef.current.offsetWidth;
-      const cellWidth = 16; // 12px cell + 4px gap
+      const cellWidth = 14; // 12px cell + 4px gap
       const padding = 48; // Account for card padding
       const usableWidth = availableWidth - padding;
       const maxCols = Math.floor(usableWidth / cellWidth);
