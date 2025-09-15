@@ -172,7 +172,7 @@ export const CallActivityGrid: React.FC<{ calls: CallEntry[] }> = ({ calls: curr
     // Calculate columns based on available width
     // Each cell is ~16px (w-3 + gap) and we want some margin
     const availableWidth = width - 200; // Account for card padding and margins
-    const cellWidth = 16; // w-3 (12px) + gap (4px)
+    const cellWidth = 12; // w-3 (12px) + gap (4px)
     const maxCols = Math.floor(availableWidth / cellWidth);
     
     // Clamp between reasonable bounds
