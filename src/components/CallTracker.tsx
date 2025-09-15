@@ -163,7 +163,7 @@ export const CallTracker: React.FC = () => {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Languages className="h-4 w-4 text-muted-foreground" />
               <Button
                 variant={language === 'en' ? 'default' : 'outline'}
