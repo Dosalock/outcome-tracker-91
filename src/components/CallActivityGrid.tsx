@@ -1,4 +1,4 @@
-import React, { useRef, useState, useMemo } from 'react';
+import React, { useRef, useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useCallTracker } from '@/hooks/useCallTracker';
@@ -24,13 +24,51 @@ interface SessionData {
   index: number;
 }
 
-
-export const CallActivityGrid: React.FC<{ calls: CallEntry[] }> = ({ calls: currentSessionCalls }) => { // Renamed prop to avoid conflict
-  const { allHistoricalCalls } = useCallTracker(); // Removed 'calls' from here
+export const CallActivityGrid: React.FC<{ calls: CallEntry[] }> = ({ calls: currentSessionCalls }) => {
+  const { allHistoricalCalls } = useCallTracker();
   const { t } = useLanguage();
   const { width } = useWindowSize();
   const containerRef = useRef(null);
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('quarter');
+  const [sessionCols, setSessionCols] = useState(20); // State to store computed columns
+
+  // Calculate responsive columns when container size changes
+  useEffect(() => {
+    const calculateSessionCols = () => {
+      if (!containerRef.current) return 20; // Default fallback
+      
+      const availableWidth = containerRef.current.offsetWidth;
+      const cellWidth = 16; // 12px cell + 4px gap
+      const padding = 48; // Account for card padding
+      const usableWidth = availableWidth - padding;
+      const maxCols = Math.floor(usableWidth / cellWidth);
+      
+      return Math.max(15, Math.min(maxCols, 50));
+    };
+
+    const updateColumns = () => {
+      if (timePeriod === 'session') {
+        const newCols = calculateSessionCols();
+        setSessionCols(newCols);
+      }
+    };
+
+    // Calculate on mount and when time period changes
+    updateColumns();
+
+    // Recalculate on window resize
+    const resizeObserver = new ResizeObserver(() => {
+      updateColumns();
+    });
+
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [timePeriod, width]); // Also depend on width from useWindowSize
 
   const generateGridData = useMemo((): DayData[] | SessionData[] => {
     console.log('CallActivityGrid: Generating grid data, currentSessionCalls length:', currentSessionCalls.length, 'historical calls length:', allHistoricalCalls.length);
@@ -109,7 +147,7 @@ export const CallActivityGrid: React.FC<{ calls: CallEntry[] }> = ({ calls: curr
     }
     
     return gridData;
-  }, [timePeriod, currentSessionCalls, allHistoricalCalls]); // Updated dependency array
+  }, [timePeriod, currentSessionCalls, allHistoricalCalls]);
 
   const gridData = generateGridData;
   const isSessionView = timePeriod === 'session';
@@ -162,19 +200,9 @@ export const CallActivityGrid: React.FC<{ calls: CallEntry[] }> = ({ calls: curr
       case 'quarter': return 'grid-cols-12'; 
       case 'month': return 'grid-cols-10';
       case 'week': return 'grid-cols-7';
-      case 'session': return getResponsiveSessionCols(containerRef);
+      case 'session': return `grid-cols-${sessionCols}`; // Use state value
       default: return 'grid-cols-12';
     }
-  };
-
-  const getResponsiveSessionCols = (ref) => {
-    if (!ref?.current) return 10;
-    
-    const availableWidth = ref.current.offsetWidth;
-    const cellWidth = 12;
-    const maxCols = Math.floor(availableWidth / cellWidth);
-    
-    return Math.max(20, Math.min(maxCols, 50));
   };
 
   // Group by weeks for display (only for non-session views)
@@ -212,124 +240,124 @@ export const CallActivityGrid: React.FC<{ calls: CallEntry[] }> = ({ calls: curr
           </CardHeader>
           <CardContent>
             {isSessionView ? (
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
-              <span>Session calls (left to right, top to bottom):</span>
-            </div>
-            <div 
-              className="grid gap-2 w-full"
-              style={{
-                gridTemplateColumns: `repeat(${getResponsiveSessionCols()}, minmax(0, 1fr))`
-              }}
-            >
-              {(gridData as SessionData[]).map((sessionData, index) => (
-                <div
-                  key={index}
-                  className={cn(
-                    "w-3 h-3 rounded-sm cursor-pointer transition-all hover:ring-1 hover:ring-primary/50",
-                    getOutcomeColor(sessionData.call.outcome)
-                  )}
-                  title={formatSessionTooltip(sessionData)}
-                />
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-1">
-            {/* Legend */}
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <span>{t('less')}</span>
-                <div className="flex gap-1">
-                  {[0, 1, 2, 3, 4].map(level => (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
+                  <span>Session calls (left to right, top to bottom):</span>
+                </div>
+                <div 
+                  className="grid gap-2 w-full"
+                  style={{
+                    gridTemplateColumns: `repeat(${sessionCols}, minmax(0, 1fr))`
+                  }}
+                >
+                  {(gridData as SessionData[]).map((sessionData, index) => (
                     <div
-                      key={level}
+                      key={index}
                       className={cn(
-                        "w-2.5 h-2.5 rounded-sm",
-                        getIntensityColor(level)
+                        "w-3 h-3 rounded-sm cursor-pointer transition-all hover:ring-1 hover:ring-primary/50",
+                        getOutcomeColor(sessionData.call.outcome)
                       )}
+                      title={formatSessionTooltip(sessionData)}
                     />
                   ))}
                 </div>
-                <span>{t('more')}</span>
               </div>
-            </div>
-
-            {/* Month labels for year view - improved legibility */}
-            {timePeriod === 'year' && (
-              <div className="grid grid-cols-[auto_1fr] gap-2 text-xs text-muted-foreground mb-2">
-                <div className="w-8"></div>
-                <div className="grid grid-cols-12 gap-1">
-                  {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map(month => (
-                    <div key={month} className="text-center font-medium">{month}</div>
-                  ))}
-                </div>
-              </div>
-            )}
-            
-            {/* Week labels for quarter view */}
-            {timePeriod === 'quarter' && (
-              <div className="grid grid-cols-[auto_1fr] gap-2 text-xs text-muted-foreground mb-2">
-                <div className="w-8"></div>
-                <div className="grid grid-cols-12 gap-1">
-                  {Array.from({ length: 12 }, (_, i) => (
-                    <div key={i} className="text-center">W{i + 1}</div>
-                  ))}
-                </div>
-              </div>
-            )}
-            
-            {/* Grid */}
-            <div className="grid grid-cols-[auto_1fr] gap-2">
-              {/* Week day labels for week/quarter/year views */}
-              {(timePeriod === 'quarter' || timePeriod === 'year') && (
-                <div className="space-y-1">
-                  {['Mon', 'Wed', 'Fri'].map((day, index) => (
-                    <div key={day} className="h-2.5 text-xs text-muted-foreground flex items-center" style={{ marginTop: index === 0 ? '0' : '0.375rem' }}>
-                      {day}
-                    </div>
-                  ))}
-                </div>
-              )}
-              
-              {/* Day labels for month/week views */}
-              {(timePeriod === 'month' || timePeriod === 'week') && (
-                <div className="w-8"></div>
-              )}
-              
-              {/* Activity grid */}
-              <div className={cn("grid gap-1", getGridCols())}>
-                {(timePeriod === 'quarter' || timePeriod === 'year') ? (
-                  weeks.map((week, weekIndex) => (
-                    <div key={weekIndex} className="space-y-1">
-                      {week.map((day, dayIndex) => (
+            ) : (
+              <div className="space-y-1">
+                {/* Legend */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <span>{t('less')}</span>
+                    <div className="flex gap-1">
+                      {[0, 1, 2, 3, 4].map(level => (
                         <div
-                          key={dayIndex}
+                          key={level}
                           className={cn(
-                            "w-2.5 h-2.5 rounded-sm cursor-pointer transition-all hover:ring-1 hover:ring-primary/50",
+                            "w-2.5 h-2.5 rounded-sm",
+                            getIntensityColor(level)
+                          )}
+                        />
+                      ))}
+                    </div>
+                    <span>{t('more')}</span>
+                  </div>
+                </div>
+
+                {/* Month labels for year view - improved legibility */}
+                {timePeriod === 'year' && (
+                  <div className="grid grid-cols-[auto_1fr] gap-2 text-xs text-muted-foreground mb-2">
+                    <div className="w-8"></div>
+                    <div className="grid grid-cols-12 gap-1">
+                      {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map(month => (
+                        <div key={month} className="text-center font-medium">{month}</div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Week labels for quarter view */}
+                {timePeriod === 'quarter' && (
+                  <div className="grid grid-cols-[auto_1fr] gap-2 text-xs text-muted-foreground mb-2">
+                    <div className="w-8"></div>
+                    <div className="grid grid-cols-12 gap-1">
+                      {Array.from({ length: 12 }, (_, i) => (
+                        <div key={i} className="text-center">W{i + 1}</div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Grid */}
+                <div className="grid grid-cols-[auto_1fr] gap-2">
+                  {/* Week day labels for week/quarter/year views */}
+                  {(timePeriod === 'quarter' || timePeriod === 'year') && (
+                    <div className="space-y-1">
+                      {['Mon', 'Wed', 'Fri'].map((day, index) => (
+                        <div key={day} className="h-2.5 text-xs text-muted-foreground flex items-center" style={{ marginTop: index === 0 ? '0' : '0.375rem' }}>
+                          {day}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {/* Day labels for month/week views */}
+                  {(timePeriod === 'month' || timePeriod === 'week') && (
+                    <div className="w-8"></div>
+                  )}
+                  
+                  {/* Activity grid */}
+                  <div className={cn("grid gap-1", getGridCols())}>
+                    {(timePeriod === 'quarter' || timePeriod === 'year') ? (
+                      weeks.map((week, weekIndex) => (
+                        <div key={weekIndex} className="space-y-1">
+                          {week.map((day, dayIndex) => (
+                            <div
+                              key={dayIndex}
+                              className={cn(
+                                "w-2.5 h-2.5 rounded-sm cursor-pointer transition-all hover:ring-1 hover:ring-primary/50",
+                                getIntensityColor(day.intensity)
+                              )}
+                              title={formatTooltip(day)}
+                            />
+                          ))}
+                        </div>
+                      ))
+                    ) : (
+                      (gridData as DayData[]).map((day, index) => (
+                        <div
+                          key={index}
+                          className={cn(
+                            "w-4 h-4 rounded-sm cursor-pointer transition-all hover:ring-1 hover:ring-primary/50",
                             getIntensityColor(day.intensity)
                           )}
                           title={formatTooltip(day)}
                         />
-                      ))}
-                    </div>
-                  ))
-                ) : (
-                  (gridData as DayData[]).map((day, index) => (
-                    <div
-                      key={index}
-                      className={cn(
-                        "w-4 h-4 rounded-sm cursor-pointer transition-all hover:ring-1 hover:ring-primary/50",
-                        getIntensityColor(day.intensity)
-                      )}
-                      title={formatTooltip(day)}
-                    />
-                  ))
-                )}
+                      ))
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
-            </div>
-          )}
+            )}
           </CardContent>
         </Card>
       </div>
