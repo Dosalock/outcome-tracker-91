@@ -245,10 +245,7 @@ export const CallActivityGrid: React.FC<{ calls: CallEntry[] }> = ({ calls: curr
                   <span>Session calls (left to right, top to bottom):</span>
                 </div>
                 <div 
-                  className="grid gap-2 w-full"
-                  style={{
-                    gridTemplateColumns: `repeat(${sessionCols}, minmax(0, 1fr))`
-                  }}
+                  className="flex flex-wrap gap-2 w-full"
                 >
                   {(gridData as SessionData[]).map((sessionData, index) => (
                     <div
@@ -326,7 +323,7 @@ export const CallActivityGrid: React.FC<{ calls: CallEntry[] }> = ({ calls: curr
                   )}
                   
                   {/* Activity grid */}
-                  <div className={cn("grid gap-1", getGridCols())}>
+                  <div className={cn("gap-1", getGridCols())}>
                     {(timePeriod === 'quarter' || timePeriod === 'year') ? (
                       weeks.map((week, weekIndex) => (
                         <div key={weekIndex} className="space-y-1">
@@ -342,7 +339,20 @@ export const CallActivityGrid: React.FC<{ calls: CallEntry[] }> = ({ calls: curr
                           ))}
                         </div>
                       ))
+                    ) : timePeriod === 'session' ? (
+                      // Session view uses flexbox layout
+                      (gridData as SessionData[]).map((sessionData, index) => (
+                        <div
+                          key={index}
+                          className={cn(
+                            "w-3 h-3 rounded-sm cursor-pointer transition-all hover:ring-1 hover:ring-primary/50",
+                            getOutcomeColor(sessionData.call.outcome)
+                          )}
+                          title={formatSessionTooltip(sessionData)}
+                        />
+                      ))
                     ) : (
+                      // Other views use grid layout
                       (gridData as DayData[]).map((day, index) => (
                         <div
                           key={index}
