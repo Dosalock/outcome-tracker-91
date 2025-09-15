@@ -245,7 +245,7 @@ export const CallActivityGrid: React.FC<{ calls: CallEntry[] }> = ({ calls: curr
                   <span>Session calls (left to right, top to bottom):</span>
                 </div>
                 <div 
-                  className="flex flex-wrap gap-2 w-full"
+                  className="flex flex-wrap gap-1 w-full"
                 >
                   {(gridData as SessionData[]).map((sessionData, index) => (
                     <div
