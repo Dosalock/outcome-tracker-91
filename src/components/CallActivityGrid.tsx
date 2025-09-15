@@ -99,7 +99,7 @@ export const CallActivityGrid: React.FC<{ calls: CallEntry[] }> = ({ calls: curr
       case 'session':
         // Return individual calls for session view (up to 200 calls)
         return currentSessionCalls
-          .slice(0, 200)
+          .slice(0, currentSessionCalls.length)
           .slice()
           .reverse()
           .map((call, index) => ({
