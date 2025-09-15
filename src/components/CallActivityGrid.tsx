@@ -171,7 +171,7 @@ export const CallActivityGrid: React.FC<{ calls: CallEntry[] }> = ({ calls: curr
     if (!ref?.current) return 10;
     
     const availableWidth = ref.current.offsetWidth;
-    const cellWidth = 16;
+    const cellWidth = 12;
     const maxCols = Math.floor(availableWidth / cellWidth);
     
     return Math.max(8, Math.min(maxCols, 50));
