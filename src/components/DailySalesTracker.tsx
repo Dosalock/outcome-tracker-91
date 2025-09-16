@@ -65,13 +65,13 @@ export const DailySalesTracker: React.FC<DailySalesTrackerProps> = ({ calls }) =
   };
 
   return (
-    <Card className="shadow-md">
-      <CardHeader className="p-6">
+    <Card className="shadow-md w-fit lg:w-auto">
+      <CardHeader className="p-4">
         <CardTitle className="text-sm">
           Dagens sälj
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-4 pt-0">
         <div className="space-y-1">
           {populatedSlots.map((slot, slotIndex) => {
             const extraGreenBoxes = getExtraGreenBoxes(slotIndex);
@@ -80,14 +80,13 @@ export const DailySalesTracker: React.FC<DailySalesTrackerProps> = ({ calls }) =
             const totalBoxes = Math.max(targetSlots, actualSales);
             
             return (
-              <div key={slotIndex} className="flex items-center space-x-2">
-                <div className="flex items-center justify-end-safe w-full">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-xs font-medium">
-                      {slot.period}
-                    </span>
-                    <div className="flex flex-wrap gap-1">
-                      {Array.from({ length: totalBoxes }, (_, boxIndex) => {
+              <div key={slotIndex} className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs font-medium min-w-[8px]">
+                    {slot.period}
+                  </span>
+                  <div className="flex flex-wrap gap-1">
+                    {Array.from({ length: totalBoxes }, (_, boxIndex) => {
                         let boxStyle = "";
                         let content = "";
                         let title = "";
@@ -127,12 +126,11 @@ export const DailySalesTracker: React.FC<DailySalesTrackerProps> = ({ calls }) =
                           </div>
                         );
                       })}
-                    </div>
                   </div>
-                  <span className="text-xs text-muted-foreground">
-                    {slot.sales.length}/{slot.targetSlots}
-                  </span>
                 </div>
+                <span className="text-xs text-muted-foreground ml-2">
+                  {slot.sales.length}/{slot.targetSlots}
+                </span>
               </div>
             );
           })}

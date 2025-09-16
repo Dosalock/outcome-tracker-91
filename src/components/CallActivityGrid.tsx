@@ -215,26 +215,24 @@ export const CallActivityGrid: React.FC<{ calls: CallEntry[] }> = ({ calls: curr
   }
 
   return (
-    <div ref={containerRef} className="flex gap-4">
+    <div ref={containerRef} className="flex flex-col lg:flex-row gap-4">
       <div className="flex-1">
         <Card className="shadow-md">
           <CardHeader>
-            <CardTitle className="flex items-left justify-between">
+            <CardTitle className="flex items-center justify-between">
               <span>{t('call-activity')}</span>
-              <div className="flex items-right gap-2">
-                <div className="flex gap-1">
-                  {(['year', 'quarter', 'month', 'week', 'session'] as TimePeriod[]).map(period => (
-                    <Button
-                      key={period}
-                      variant={timePeriod === period ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setTimePeriod(period)}
-                      className="h-7 px-2 text-xs"
-                    >
-                      {period.charAt(0).toUpperCase() + period.slice(1)}
-                    </Button>
-                  ))}
-                </div>
+              <div className="flex gap-1">
+                {(['year', 'quarter', 'month', 'week', 'session'] as TimePeriod[]).map(period => (
+                  <Button
+                    key={period}
+                    variant={timePeriod === period ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setTimePeriod(period)}
+                    className="h-7 px-2 text-xs"
+                  >
+                    {period.charAt(0).toUpperCase() + period.slice(1)}
+                  </Button>
+                ))}
               </div>
             </CardTitle>
           </CardHeader>
@@ -358,7 +356,7 @@ export const CallActivityGrid: React.FC<{ calls: CallEntry[] }> = ({ calls: curr
           </CardContent>
         </Card>
       </div>
-      <div className="w-80 h-full">
+      <div className="lg:w-auto w-full">
         <DailySalesTracker calls={currentSessionCalls} />
       </div>
     </div>
