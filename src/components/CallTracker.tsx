@@ -152,8 +152,8 @@ export const CallTracker: React.FC = () => {
     <div className="min-h-screen bg-background p-4 sm:p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex flex-wrap flex-col sm:flex-row sm:justify-end justify-between items-start gap-4">
-          <div className="mr-auto gap-3">
+        <div className="p-2 items-start flex flex-row gap-4">
+          <div className="mr-auto flex justify-between items-center whitespace-nowrap gap-3">
             <div className="p-2 bg-primary/10 rounded-lg">
               <Phone className="h-6 w-6 text-primary" />
             </div>
@@ -162,7 +162,7 @@ export const CallTracker: React.FC = () => {
               <p className="text-muted-foreground">{t('track-performance')}</p>
             </div>
           </div>
-          <div className="flex flex-wrap justify-end-safe items-center gap-3">
+          <div className="flex flex-wrap justify-end items-start gap-3">
             <div className="flex whitespace-nowrap items-center gap-2">
               <Languages className="h-4 w-4 text-muted-foreground" />
               <Button
