@@ -356,7 +356,7 @@ export const CallActivityGrid: React.FC<{ calls: CallEntry[] }> = ({ calls: curr
           </CardContent>
         </Card>
       </div>
-      <div className="lg:w-auto w-full">
+      <div className="w-auto shrink-0">
         <DailySalesTracker calls={currentSessionCalls} />
       </div>
     </div>
