@@ -215,7 +215,7 @@ export const CallActivityGrid: React.FC<{ calls: CallEntry[] }> = ({ calls: curr
   }
 
   return (
-    <div ref={containerRef} className="flex flex-col lg:flex-row gap-4">
+    <div ref={containerRef} className="flex flex-row gap-4">
       <div className="flex-1">
         <Card className="shadow-md">
           <CardHeader>
