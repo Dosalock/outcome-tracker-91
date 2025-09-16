@@ -108,10 +108,10 @@ const translations = {
     'not-engaged': 'Inte engagerad',
     
     // Export
-    'export-csv': 'Exportera CSV',
+    'export-csv': 'Export',
     
     // Activity Grid
-    'call-activity': 'Samtalsaktivitet',
+    'call-activity': 'Utfall',
     'less': 'Mindre',
     'more': 'Mer'
   }
