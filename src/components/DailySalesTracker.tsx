@@ -81,7 +81,7 @@ export const DailySalesTracker: React.FC<DailySalesTrackerProps> = ({ calls }) =
             
             return (
               <div key={slotIndex} className="flex items-center space-x-2">
-                <div className="flex items-center justify-between w-full">
+                <div className="flex items-center justify-end-safe w-full">
                   <div className="flex items-center space-x-2">
                     <span className="text-xs font-medium">
                       {slot.period}
