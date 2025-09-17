@@ -170,6 +170,8 @@
 
   body {
     @apply bg-background text-foreground font-sans;
+    transform: scale(0.8);
+    transform-origin: top center;
   }
 
   /* Custom scrollbar */
